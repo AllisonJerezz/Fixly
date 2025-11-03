@@ -36,18 +36,20 @@ export default function RequestEdit() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    const r = lsGetRequestById(id);
-    if (!r) return;
-    setReq(r);
-    setForm({
-      title: r.title || "",
-      category: r.category || "",
-      description: r.description || "",
-      budget: typeof r.budget === "number" ? r.budget : "",
-      location: r.location || "",
-      urgency: r.urgency || "normal",
-      status: r.status || "pendiente",
-    });
+    (async () => {
+      const r = await lsGetRequestById(id);
+      if (!r) return;
+      setReq(r);
+      setForm({
+        title: r.title || "",
+        category: r.category || "",
+        description: r.description || "",
+        budget: typeof r.budget === "number" ? r.budget : "",
+        location: r.location || "",
+        urgency: r.urgency || "normal",
+        status: r.status || "pendiente",
+      });
+    })();
   }, [id]);
 
   function onChange(e) {
@@ -79,7 +81,7 @@ export default function RequestEdit() {
         urgency: form.urgency,
         status: form.status,
       };
-      const updated = lsUpdateRequest(id, patch);
+      const updated = await lsUpdateRequest(id, patch);
       if (!updated) {
         show("No se pudo guardar", { type: "error" });
         setErr("No se pudo guardar la solicitud.");
@@ -166,7 +168,7 @@ export default function RequestEdit() {
                     value={form.category}
                     onChange={onChange}
                     required
-                    className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-sky-300/40"
+                    className="w-full rounded-xl border border-white/15 bg-indigo-500/20 px-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-sky-300/40"
                   >
                     <option value="">Selecciona una categoría</option>
                     <option value="Plomería">Plomería</option>
@@ -183,7 +185,7 @@ export default function RequestEdit() {
                     name="urgency"
                     value={form.urgency}
                     onChange={onChange}
-                    className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-sky-300/40"
+                    className="w-full rounded-xl border border-white/15 bg-indigo-500/20 px-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-sky-300/40"
                   >
                     <option value="baja">Baja</option>
                     <option value="normal">Normal</option>

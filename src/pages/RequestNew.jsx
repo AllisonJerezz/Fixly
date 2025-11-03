@@ -1,7 +1,7 @@
 // src/pages/RequestNew.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { createRequest, readProfile } from "../api";
+import { lsCreateRequest, readProfile } from "../api";
 
 const CATEGORIES = [
   "Plomería", "Electricidad", "Gasfitería", "Pintura",
@@ -72,7 +72,7 @@ export default function RequestNew() {
 
     try {
       setLoading(true);
-      const created = createRequest({
+      const created = await lsCreateRequest({
         title: form.title.trim(),
         category: form.category,
         location: form.location.trim(),
@@ -136,7 +136,7 @@ export default function RequestNew() {
                 name="category"
                 value={form.category}
                 onChange={onChange}
-                className="w-full rounded-xl border border-white/15 bg-white px-4 py-2.5 text-slate-900 outline-none focus:ring-2 focus:ring-sky-300/40"
+                className="w-full rounded-xl border border-white/15 bg-indigo-500/20 px-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-sky-300/40"
               >
                 <option value="">Selecciona una categoría</option>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -160,7 +160,7 @@ export default function RequestNew() {
                 name="urgency"
                 value={form.urgency}
                 onChange={onChange}
-                className="w-full rounded-xl border border-white/15 bg-white px-4 py-2.5 text-slate-900 outline-none focus:ring-2 focus:ring-sky-300/40"
+                className="w-full rounded-xl border border-white/15 bg-indigo-500/20 px-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-sky-300/40"
               >
                 <option value="baja">baja</option>
                 <option value="normal">normal</option>

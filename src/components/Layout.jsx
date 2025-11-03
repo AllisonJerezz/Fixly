@@ -1,8 +1,9 @@
 // src/components/Layout.jsx
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { isAuthed, readProfile, lsGetRequests } from "../api";
+import Notifier from "./Notifier";
 import { useEffect, useMemo, useState } from "react";
-import { ToastProvider } from "./Toast";
+// Proveedor de toasts se aplica a nivel raíz (main.jsx)
 
 export default function Layout({ authed, onLogout, children }) {
   const logged = authed || isAuthed();
@@ -10,7 +11,7 @@ export default function Layout({ authed, onLogout, children }) {
   const navigate = useNavigate();
   
   // Páginas con fondo oscuro propio (prefijos incluidos)
-  const darkRoots = ["/", "/login", "/register", "/home", "/requests", "/onboarding", "/profile", "/services", "/chat"];
+  const darkRoots = ["/", "/login", "/register", "/home", "/requests", "/onboarding", "/profile", "/services", "/service", "/chat"];
   const isDarkPage = darkRoots.some((p) => pathname === p || pathname.startsWith(p + "/"));
 
   const profile = readProfile?.();
@@ -19,15 +20,11 @@ export default function Layout({ authed, onLogout, children }) {
   const isProvider = role === "provider";
 
   // (opcional) refresco de conteo de requests si cambian en otra pestaña
-  const [reqTick, setReqTick] = useState(0);
-  useEffect(() => {
-    const onStorage = (e) => { if (e.key === "requests") setReqTick((t) => t + 1); };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-  const requestsCount = useMemo(() => {
-    try { return lsGetRequests()?.length || 0; } catch { return 0; }
-  }, [pathname, reqTick]);
+  const [requestsCount, setRequestsCount] = useState(0);
+  useEffect(() => { (async () => { try {
+    const list = await lsGetRequests();
+    setRequestsCount(Array.isArray(list) ? list.length : 0);
+  } catch { setRequestsCount(0); } })(); }, [pathname]);
 
   /* ---- helpers ---- */
   function initials(name = "") {
@@ -79,8 +76,8 @@ export default function Layout({ authed, onLogout, children }) {
     ].join(" ");
 
   return (
-    <ToastProvider>
-      <div className="min-h-screen text-slate-900">
+    <div className="min-h-screen text-slate-900">
+        <Notifier />
         {/* Navbar */}
         <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
           <nav className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
@@ -179,6 +176,5 @@ export default function Layout({ authed, onLogout, children }) {
           </div>
         </footer>
       </div>
-    </ToastProvider>
-  );
+    );
 }

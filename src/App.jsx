@@ -19,6 +19,7 @@ import RequestNew from "./pages/RequestNew";
 import RequestEdit from "./pages/RequestEdit";
 import Services from "./pages/Services";
 import ServiceNew from "./pages/ServiceNew";
+import ServiceDetail from "./pages/ServiceDetail";
 
 
 import { isAuthed, logout, readProfile, hasOnboardingDone } from "./api";
@@ -123,6 +124,14 @@ export default function App() {
   element={
     <RequireOnboarding>
       <RequireProvider><ServiceNew /></RequireProvider>
+    </RequireOnboarding>
+  }
+/>
+<Route
+  path="/service/:id"
+  element={
+    <RequireOnboarding>
+      <ServiceDetail />
     </RequireOnboarding>
   }
 />

@@ -1,7 +1,7 @@
 // src/pages/Services.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { currentUserKey, getMyServices } from "../api";
+import { currentUserKey, lsGetMyServices } from "../api";
 import RatingBadge from "../components/RatingBadge";
 
 function CLP(n) {
@@ -11,10 +11,10 @@ function CLP(n) {
 
 export default function Services() {
   const me = currentUserKey();
-  const [list, setList] = useState(() => getMyServices() || []);
+  const [list, setList] = useState([]);
 
   useEffect(() => {
-    setList(getMyServices() || []);
+    (async () => { try { setList(await lsGetMyServices()); } catch { setList([]); } })();
   }, []);
 
   const active = useMemo(() => list.filter(s => s.status !== "pausado").length, [list]);

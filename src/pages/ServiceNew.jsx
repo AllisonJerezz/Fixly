@@ -1,7 +1,7 @@
-// src/pages/ServiceNew.jsx
+﻿// src/pages/ServiceNew.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createService } from "../api";
+import { lsCreateService } from "../api";
 
 function Field({ label, hint, children }){
   return (
@@ -39,7 +39,7 @@ export default function ServiceNew(){
     }
     try{
       setLoading(true);
-      const created = createService({
+      const created = await lsCreateService({
         title: form.title.trim(),
         category: form.category,
         priceFrom: form.priceFrom ? Number(form.priceFrom) : 0,
@@ -87,7 +87,7 @@ export default function ServiceNew(){
                   name="category"
                   value={form.category}
                   onChange={onChange}
-                  className="w-full rounded-xl border border-white/15 bg-white px-4 py-2.5 text-slate-900 outline-none focus:ring-2 focus:ring-sky-300/40"
+                  className="w-full rounded-xl border border-white/15 bg-indigo-500/20 px-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-sky-300/40"
                 >
                   <option value="">Selecciona una categoría</option>
                   <option value="Plomería">Plomería</option>
@@ -111,7 +111,7 @@ export default function ServiceNew(){
                   value={form.priceFrom}
                   onChange={onChange}
                   placeholder="Ej: 30000"
-                  className="w-full rounded-xl border border-white/15 bg-white px-4 py-2.5 text-slate-900 outline-none focus:ring-2 focus:ring-sky-300/40"
+                  className="w-full rounded-xl border border-white/15 bg-indigo-500/20 px-4 py-2.5 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
                 />
               </Field>
             </div>

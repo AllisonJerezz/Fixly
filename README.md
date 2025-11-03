@@ -1,12 +1,67 @@
-# React + Vite
+﻿# Fixly Front + Backend Django
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este repositorio contiene:
+- Frontend: React + Vite (carpeta raíz, puerto 5173)
+- Backend: Django + DRF + PostgreSQL (carpeta ackend_django/, puerto 8000)
 
-Currently, two official plugins are available:
+## Frontend
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Variables de entorno:
 
-## Expanding the ESLint configuration
+`
+VITE_API_URL=http://localhost:8000/api
+`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Ejecutar (desde la raíz):
+
+`
+npm install
+npm run dev
+`
+
+La app usará el backend si está disponible; mientras migras, hay lógica local en src/api.js.
+
+## Backend con Django (activo)
+
+El backend Django/DRF está en ackend_django/ con endpoints compatibles.
+
+Requisitos: Python 3.11+, pip, PostgreSQL.
+
+1) Instalar dependencias:
+
+`
+cd backend_django
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+pip install -r requirements.txt
+`
+
+2) Configurar entorno:
+
+`
+copy .env.example .env
+# Ajusta POSTGRES_* y DJANGO_ALLOWED_ORIGINS si corresponde
+`
+
+3) Migraciones + runserver:
+
+`
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8000
+`
+
+4) Endpoints expuestos
+
+- GET /api/health
+- POST /api/auth/register, POST /api/auth/login
+- GET/PUT /api/profile
+- GET/POST /api/requests, GET/PUT/DELETE /api/requests/<id>
+- GET/POST /api/requests/<id>/offers, POST /api/requests/<id>/offers/<offerId>/accept|reject
+- GET/POST /api/services, GET /api/services/me, GET/PUT/DELETE /api/services/<id>
+- POST /api/services/<id>/contact, GET /api/me/leads
+- GET/POST /api/chats/<requestId>/messages
+- POST /api/reviews, GET /api/users/<userId>/reviews, GET /api/users/<userId>/rating
+
+## Notas
+- Docker es opcional y no se usa aquí por defecto. Si necesitas levantar PostgreSQL con Docker, puedo dejarte un docker-compose.yml específico para Postgres.
+- Si vienes de la versión Node/Express anterior, ya no se requiere nada de Node en el backend.

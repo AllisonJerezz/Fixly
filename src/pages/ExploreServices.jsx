@@ -1,4 +1,4 @@
-// src/pages/ExploreServices.jsx
+﻿// src/pages/ExploreServices.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { lsGetServices } from "../api";
@@ -10,14 +10,12 @@ function CLP(n) {
 }
 
 export default function ExploreServices() {
-  const [all, setAll] = useState(() => lsGetServices() || []);
+  const [all, setAll] = useState([]);
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("Todas");
   const [loc, setLoc] = useState("");
 
-  useEffect(() => {
-    setAll(lsGetServices() || []);
-  }, []);
+  useEffect(() => { (async () => { try { setAll(await lsGetServices()); } catch { setAll([]); } })(); }, []);
 
   const categories = useMemo(() => {
     const set = new Set(all.map(s => s.category).filter(Boolean));
@@ -66,7 +64,7 @@ export default function ExploreServices() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="rounded-lg border border-white/15 bg-white px-3 py-2 text-slate-900 outline-none focus:ring-2 focus:ring-sky-300/40"
+              className="rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-sky-300/40"
             >
               {categories.map((c) => (<option key={c} value={c}>{c}</option>))}
             </select>
@@ -92,7 +90,7 @@ export default function ExploreServices() {
                 category: s.category || "",
                 location: s.location || "",
                 priceFrom: String(s.priceFrom || ""),
-                to: s.ownerId || "",
+                to: s.ownerId || s.owner || "",
                 serviceId: s.id || ""
               }).toString();
 
@@ -109,16 +107,21 @@ export default function ExploreServices() {
                   <div className="mt-1 text-sm text-indigo-200/85">{s.location || "—"}</div>
 
                   {/* Reputación del proveedor */}
-                  <div className="mt-2">
-                    <RatingBadge userId={s.ownerId} />
-                  </div>
+                  <div className="mt-2">\n                    <RatingBadge userId={s.ownerId || s.owner} />\n                  </div>
 
                   {s.description && (
                     <p className="mt-3 line-clamp-3 text-sm text-white/90">{s.description}</p>
                   )}
 
-                  {/* CTA Contactar */}
-                  <div className="mt-4">
+                  {/* CTAs */}
+                  <div className="mt-4 flex items-center gap-2">
+                    <Link
+                      to={`/service/${s.id}`}
+                      className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
+                      title="Ver detalle del servicio"
+                    >
+                      Ver detalle
+                    </Link>
                     <Link
                       to={`/requests/new?${q}`}
                       className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400"

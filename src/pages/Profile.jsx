@@ -1,4 +1,4 @@
-// src/pages/Profile.jsx
+﻿// src/pages/Profile.jsx
 import { useEffect, useRef, useState } from "react";
 import { readProfile, saveProfile } from "../api";
 import { useNavigate } from "react-router-dom";

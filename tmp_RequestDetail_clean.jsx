@@ -42,33 +42,6 @@ export default function RequestDetail() {
   });
   const [savingOffer, setSavingOffer] = useState(false);
 
-  // Estado para reseñas (debe ejecutarse en todos los renders)
-  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
-
-  // Verificar si ya existe reseña cuando hay ganador y soy dueño (cliente)
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!req) return;
-        const ownerViewNow = req ? isOwner(req) : false;
-        const isClientOwnerNow = ownerViewNow && profile?.role === "client";
-        const offersList = Array.isArray(req.offers) ? req.offers : [];
-        const accepted = (req?.acceptedOfferId
-          ? (offersList.find(o => o.id === req.acceptedOfferId) || null)
-          : (offersList.find(o => String(o.status || '').toLowerCase() === 'accepted') || null));
-        const providerWinnerId = accepted?.providerId || "";
-        const meIdNow = currentUserKey?.() || "guest";
-        if (isClientOwnerNow && providerWinnerId) {
-          const done = await lsHasReviewFromUserForRequest({ requestId: req.id, fromUserId: meIdNow });
-          setAlreadyReviewed(!!done);
-        }
-      } catch {}
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [req?.id, req?.offers?.length, profile?.role]);
-
   async function refresh() {
     const r = await lsGetRequestById(id);
     setReq(r);
@@ -78,15 +51,7 @@ export default function RequestDetail() {
   useEffect(() => { refresh(); }, [id]);
   useEffect(() => {
     if (!req) return;
-    (async () => {
-      try {
-        const mine = await lsMyOffer(req.id);
-        setOffer({ message: mine?.message || "", price: mine?.price || "" });
-      } catch (e) {
-        // Si el backend no responde, evitamos romper el render
-        console.warn("lsMyOffer falló:", e?.message || e);
-      }
-    })();
+    (async () => { const mine = await lsMyOffer(req.id); setOffer({ message: mine?.message || "", price: mine?.price || "" }); })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [req?.offers?.length]);
 
@@ -125,11 +90,21 @@ export default function RequestDetail() {
   const meId = currentUserKey?.() || "guest";
 
   // Reseñas del cliente hacia el proveedor ganador
-  // moved: const [alreadyReviewed, setAlreadyReviewed] = useState(false);
-  // moved: const [rating, setRating] = useState(5);
-  // moved: const [comment, setComment] = useState("");
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
 
-  // moved: useEffect para verificar reseña se declaró antes del return condicional
+  useEffect(() => {
+    (async () => {
+      try {
+        if (req && isClientOwner && providerWinnerId) {
+          const done = await lsHasReviewFromUserForRequest({ requestId: req.id, fromUserId: meId });
+          setAlreadyReviewed(!!done);
+        }
+      } catch {}
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [req?.id, isClientOwner, providerWinnerId]);
 
   async function handleAccept(offerId) {
     setErr(""); setOk("");
@@ -254,7 +229,7 @@ export default function RequestDetail() {
             </div>
 
             <h1 className="text-3xl font-extrabold text-white/95">{req.title}</h1>
-            <p className="mt-1 text-sm text-indigo-200/80">Creado: {new Date(req.created_at || req.createdAt).toLocaleString()}</p>
+            <p className="mt-1 text-sm text-indigo-200/80">Creado: {new Date(req.createdAt).toLocaleString()}</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -292,8 +267,8 @@ export default function RequestDetail() {
           <div className="lg:col-span-2 grid gap-8">
             <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-6 shadow-2xl backdrop-blur">
               <div className="grid gap-4 sm:grid-cols-3">
-                <InfoBox label="Ubicación" value={req.location || "-"} />
-                <InfoBox label="Presupuesto" value={req.budget ? CLP(req.budget) : "-"} />
+                <InfoBox label="Ubicación" value={req.location || "—"} />
+                <InfoBox label="Presupuesto" value={req.budget ? CLP(req.budget) : "—"} />
                 <InfoBox label="Estado" value={<StatusBadge status={req.status || "pendiente"} />} />
               </div>
 
@@ -337,7 +312,7 @@ export default function RequestDetail() {
                     .sort((a, b) => {
                       if (req.acceptedOfferId === a.id) return -1;
                       if (req.acceptedOfferId === b.id) return 1;
-                      return new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt);
+                      return new Date(b.createdAt) - new Date(a.createdAt);
                     })
                     .map((o) => (
                       <OfferCard
@@ -434,10 +409,10 @@ export default function RequestDetail() {
               <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-6 shadow-2xl backdrop-blur">
                 <h3 className="text-lg font-extrabold text-white/95">Resumen</h3>
                 <div className="mt-3 grid gap-2">
-                  <InfoRow label="Categoría" value={req.category || "-"} />
-                  <InfoRow label="Ubicación" value={req.location || "-"} />
+                  <InfoRow label="Categoría" value={req.category || "—"} />
+                  <InfoRow label="Ubicación" value={req.location || "—"} />
                   <InfoRow label="Urgencia" value={req.urgency || "normal"} />
-                  <InfoRow label="Presupuesto" value={req.budget ? CLP(req.budget) : "-"} />
+                  <InfoRow label="Presupuesto" value={req.budget ? CLP(req.budget) : "—"} />
                 </div>
                 {ownerView && (
                   <div className="mt-4 grid gap-2">
@@ -482,13 +457,13 @@ function OfferCard({ offer, isWinner, canDecide, onAccept, onReject, me }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2 text-[11px] text-indigo-200/80">
-            <span>Proveedor: <strong className="text-white/95">{offer.providerId || "-"}</strong></span>
+            <span>Proveedor: <strong className="text-white/95">{offer.providerId || "—"}</strong></span>
             {offer.providerId === me && (
               <span className="rounded-full border border-white/10 bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-semibold text-indigo-100/90">Tu oferta</span>
             )}
-            <span>{new Date(offer.created_at || offer.createdAt).toLocaleString()}</span>
+            <span>· {new Date(offer.createdAt).toLocaleString()}</span>
           </div>
-          <div className="whitespace-pre-wrap text-sm text-white/95">{offer.message || "-"}</div>
+          <div className="whitespace-pre-wrap text-sm text-white/95">{offer.message || "—"}</div>
         </div>
 
         <div className="shrink-0 text-right">
@@ -524,8 +499,5 @@ function OfferCard({ offer, isWinner, canDecide, onAccept, onReject, me }) {
     </div>
   );
 }
-
-
-
 
 

@@ -1,6 +1,6 @@
-// src/pages/Home.jsx
+﻿// src/pages/Home.jsx
 import { Link } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { lsGetRequests, readProfile, isOwner, currentUserKey } from "../api";
 import StatusBadge from "../components/StatusBadge";
 import AvatarPicker from "../components/AvatarPicker";
@@ -12,11 +12,8 @@ function CLP(n) {
 }
 
 function MiniCard({ item, isClientView }) {
-  const offers = Array.isArray(item.offers) ? item.offers : [];
-  const count = offers.length;
-  const accepted = item.acceptedOfferId
-    ? offers.find(o => o.id === item.acceptedOfferId)
-    : null;
+  const count = item?._count?.offers ?? (Array.isArray(item.offers) ? item.offers.length : 0);
+  const accepted = item.acceptedOfferId ? { id: item.acceptedOfferId, price: item.acceptedPrice || null, providerId: item.acceptedProviderId || "" } : null;
 
   return (
     <Link
@@ -25,7 +22,7 @@ function MiniCard({ item, isClientView }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="mb-1 text-[11px] text-indigo-200/80">ID: {item.id}</div>
+          
           <h3 className="truncate text-base font-extrabold text-white/95">
             {item.title}
           </h3>
@@ -54,7 +51,7 @@ function MiniCard({ item, isClientView }) {
         {accepted && (
           <div className="shrink-0 rounded-lg border border-emerald-300/40 bg-emerald-400/10 px-3 py-2 text-right">
             <div className="text-[10px] uppercase tracking-wide text-emerald-200">Ganador</div>
-            <div className="text-sm font-bold text-emerald-100">{CLP(accepted.price)}</div>
+            {accepted?.price && <div className="text-sm font-bold text-emerald-100">{CLP(accepted.price)}</div>}
           </div>
         )}
       </div>
@@ -75,12 +72,12 @@ function MiniCard({ item, isClientView }) {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="text-[11px] text-indigo-200/70">Creado: {new Date(item.createdAt).toLocaleString()}</div>
+        <div className="text-[11px] text-indigo-200/70">Creado: {new Date(item.created_at || item.createdAt || Date.now()).toLocaleString()}</div>
         <div className="text-[11px] text-indigo-100/95">
           {accepted
             ? (isClientView
                 ? `Proveedor aceptado: ${accepted.providerId}`
-                : `Estado de proceso: en progreso`)
+                : `Estado: en progreso`)
             : (count > 0
                 ? (isClientView ? "Tienes ofertas para revisar" : "Aún en concurso")
                 : "Sin ofertas aún")}
@@ -97,8 +94,9 @@ export default function Home() {
   const displayName = profile?.displayName || "";
   const me = currentUserKey?.() || "guest";
 
-  // Todas las solicitudes
-  const all = lsGetRequests();
+  // Todas las solicitudes (desde API)
+  const [all, setAll] = useState([]);
+  useEffect(() => { (async () => { try { setAll(await lsGetRequests()); } catch { setAll([]); } })(); }, [role]);
 
   // Listas por rol
   const mine = useMemo(() => all.filter(r => isOwner(r)), [all]);
@@ -132,14 +130,14 @@ export default function Home() {
   // Últimas 3 según rol
   const last3 = useMemo(() => {
     const list = role === "provider" ? available : mine;
-    return [...list].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 3);
+    return [...list].sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)).slice(0, 3);
   }, [mine, available, role]);
 
   // Urgentes (proveedor): alta + no propias
   const urgentForProvider = useMemo(() => {
     if (role !== "provider") return [];
     const list = available.filter(r => (r.urgency || "normal") === "alta");
-    return [...list].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 3);
+    return [...list].sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)).slice(0, 3);
   }, [available, role]);
 
   return (
