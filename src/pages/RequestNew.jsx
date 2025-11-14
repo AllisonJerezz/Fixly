@@ -13,25 +13,69 @@ export default function RequestNew() {
   const profile = readProfile?.();
   const [params] = useSearchParams();
 
-  // Leer params para prefill cuando vengo desde "Contactar"
+  // Prefill desde querystring (al venir de "Contactar")
   const prefill = useMemo(() => {
     const title = params.get("title");
     const category = params.get("category");
     const location = params.get("location");
     const priceFrom = params.get("priceFrom");
-    const to = params.get("to");           // proveedor (ownerId)
+    const to = params.get("to"); // proveedor (ownerId)
     const serviceId = params.get("serviceId");
-
     return {
       title: title ? `Quiero ${title}` : "",
       category: category || "",
       location: location || "",
       budget: priceFrom ? Number(priceFrom) : 0,
       to: to || "",
-      serviceId: serviceId || ""
+      serviceId: serviceId || "",
     };
   }, [params]);
 
+  // Nombre del proveedor a mostrar
+  const [provName, setProvName] = useState("");
+  const [svcTitle, setSvcTitle] = useState("");
+  useEffect(() => {
+    (async () => {
+      try {
+        const key = String(prefill.to || '').trim();
+        if (!key) return;
+        // 1) Intentar cache local (perfiles guardados por usernameLower)
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('profile:')) {
+            try {
+              const p = JSON.parse(localStorage.getItem(k) || 'null');
+              if (p && (String(p.id) === key || String(p.username || '').toLowerCase() === key.toLowerCase())) {
+                setProvName(p.displayName || p.username || 'Proveedor');
+                return;
+              }
+            } catch {}
+          }
+        }
+        // 2) Preguntar al backend por id
+        const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+        const r = await fetch(`${base}/users/${key}`);
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d) setProvName((d?.profile?.display_name || d?.username || 'Proveedor').trim());
+      } catch {}
+    })();
+  }, [prefill.to]);
+
+  // Cargar título del servicio (si viene desde "Contactar")
+  useEffect(() => {
+    (async () => {
+      try {
+        const sid = String(prefill.serviceId || '').trim();
+        if (!sid) { setSvcTitle(""); return; }
+        const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+        const r = await fetch(`${base}/services/${sid}`);
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d) setSvcTitle(String(d.title || '').trim());
+      } catch { setSvcTitle(""); }
+    })();
+  }, [prefill.serviceId]);
+
+  // Formulario
   const [form, setForm] = useState({
     title: prefill.title || "",
     category: prefill.category || "",
@@ -40,36 +84,32 @@ export default function RequestNew() {
     budget: prefill.budget || "",
     description: "",
   });
-
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Si cambia la URL con nuevos params (raro, pero por si acaso)
-    setForm(f => ({
+    setForm((f) => ({
       ...f,
       title: prefill.title || f.title,
       category: prefill.category || f.category,
       location: prefill.location || f.location,
-      budget: prefill.budget || f.budget
+      budget: prefill.budget || f.budget,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefill.title, prefill.category, prefill.location, prefill.budget]);
 
   function onChange(e) {
     const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: name === "budget" ? value.replace(/[^\d]/g, "") : value }));
+    setForm((f) => ({ ...f, [name]: name === 'budget' ? value.replace(/[^\d]/g, '') : value }));
   }
 
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
-
     if (!form.title.trim() || !form.category) {
       setErr("Completa el título y la categoría.");
       return;
     }
-
     try {
       setLoading(true);
       const created = await lsCreateRequest({
@@ -79,8 +119,6 @@ export default function RequestNew() {
         urgency: form.urgency,
         description: form.description.trim(),
         budget: Number(form.budget) || 0,
-        // Guardamos “metadata” suave para saber si venía de un servicio
-        // (no afecta la app, pero puede ser útil para debug o mejoras futuras)
         fromService: prefill.serviceId || "",
         toProvider: prefill.to || "",
       });
@@ -94,7 +132,7 @@ export default function RequestNew() {
 
   return (
     <section className="relative overflow-hidden">
-      {/* Fondo oscuro consistente */}
+      {/* Fondo */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#0A1540] via-[#0B1B4F] to-[#0D2266]" />
       <div className="pointer-events-none absolute -left-28 top-24 h-72 w-72 rounded-full bg-indigo-600/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-10 h-80 w-80 rounded-full bg-sky-500/5 blur-3xl" />
@@ -102,19 +140,17 @@ export default function RequestNew() {
       <div className="mx-auto min-h-[calc(100vh-5rem)] max-w-4xl px-4 py-10 text-white">
         <h1 className="mb-4 text-3xl font-extrabold text-white/95">Nueva solicitud</h1>
 
-        {/* Banner de contacto si viene desde Explorar */}
         {prefill.to && (
           <div className="mb-4 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-indigo-100/90">
-            Estás contactando al proveedor: <strong className="text-white/95">{prefill.to}</strong>
-            {prefill.serviceId ? <> (servicio #{prefill.serviceId})</> : null}.<br />
+            Estás contactando al proveedor: <strong className="text-white/95">{provName || 'Proveedor'}</strong>
+            {svcTitle ? <> (servicio {svcTitle})</> : null}.
+            <br />
             Al publicar, tu solicitud será visible y el proveedor podrá ofertar.
           </div>
         )}
 
         {err && (
-          <div className="mb-4 rounded-xl border border-rose-300/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-100">
-            {err}
-          </div>
+          <div className="mb-4 rounded-xl border border-rose-300/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-100">{err}</div>
         )}
 
         <form onSubmit={onSubmit} className="rounded-3xl border border-white/10 bg-white/[0.05] p-6 shadow-2xl backdrop-blur">
@@ -129,7 +165,6 @@ export default function RequestNew() {
                 className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
               />
             </div>
-
             <div>
               <label className="mb-1 block text-sm text-indigo-200/85">Categoría</label>
               <select
@@ -139,10 +174,11 @@ export default function RequestNew() {
                 className="w-full rounded-xl border border-white/15 bg-indigo-500/20 px-4 py-2.5 text-white outline-none focus:ring-2 focus:ring-sky-300/40"
               >
                 <option value="">Selecciona una categoría</option>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
             </div>
-
             <div>
               <label className="mb-1 block text-sm text-indigo-200/85">Ubicación</label>
               <input
@@ -153,7 +189,6 @@ export default function RequestNew() {
                 className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
               />
             </div>
-
             <div>
               <label className="mb-1 block text-sm text-indigo-200/85">Urgencia</label>
               <select
@@ -167,7 +202,6 @@ export default function RequestNew() {
                 <option value="alta">alta</option>
               </select>
             </div>
-
             <div>
               <label className="mb-1 block text-sm text-indigo-200/85">Presupuesto (CLP)</label>
               <input
@@ -179,7 +213,6 @@ export default function RequestNew() {
                 className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
               />
             </div>
-
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm text-indigo-200/85">Descripción</label>
               <textarea
@@ -210,7 +243,6 @@ export default function RequestNew() {
           </div>
         </form>
 
-        {/* bloom */}
         <div className="pointer-events-none mx-auto mt-8 h-16 max-w-4xl rounded-full bg-gradient-to-r from-transparent via-white/5 to-transparent blur-2xl" />
       </div>
     </section>

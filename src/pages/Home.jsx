@@ -13,7 +13,36 @@ function CLP(n) {
 
 function MiniCard({ item, isClientView }) {
   const count = item?._count?.offers ?? (Array.isArray(item.offers) ? item.offers.length : 0);
-  const accepted = item.acceptedOfferId ? { id: item.acceptedOfferId, price: item.acceptedPrice || null, providerId: item.acceptedProviderId || "" } : null;
+  const accepted = item.acceptedOfferId ? { id: item.acceptedOfferId, price: item.acceptedPrice || null, providerId: item.acceptedProviderId || "", providerName: item.acceptedProviderName || "" } : null;
+  function resolveName(key){
+    const k = String(key||'').trim();
+    if (!k) return '';
+    try {
+      const me = readProfile?.();
+      if (me && (String(me.id) === k || String(me.username||'').toLowerCase() === k.toLowerCase())) {
+        return me.displayName || me.username || k;
+      }
+    } catch {}
+    if (k.includes('-')) {
+      try {
+        for (let i=0;i<localStorage.length;i++){
+          const kk = localStorage.key(i);
+          if (kk && kk.startsWith('profile:')){
+            try{
+              const p = JSON.parse(localStorage.getItem(kk) || 'null');
+              if (p && String(p.id) === k) return p.displayName || p.username || k;
+            }catch{}
+          }
+        }
+      } catch {}
+      return 'Proveedor';
+    }
+    try {
+      const p = JSON.parse(localStorage.getItem(`profile:${k.toLowerCase()}`) || 'null');
+      return p?.displayName || p?.username || k;
+    } catch { return k; }
+  }
+  const providerName = accepted?.providerName || (accepted?.providerId ? resolveName(accepted.providerId) : "");
 
   return (
     <Link
@@ -76,7 +105,7 @@ function MiniCard({ item, isClientView }) {
         <div className="text-[11px] text-indigo-100/95">
           {accepted
             ? (isClientView
-                ? `Proveedor aceptado: ${accepted.providerId}`
+                ? (`Proveedor aceptado${providerName && providerName !== 'Proveedor' ? `: ${providerName}` : ''}`)
                 : `Estado: en progreso`)
             : (count > 0
                 ? (isClientView ? "Tienes ofertas para revisar" : "Aún en concurso")
@@ -105,13 +134,13 @@ export default function Home() {
   // Métricas rápidas
   const metrics = useMemo(() => {
     if (role === "client") {
-      const active = mine.filter(r => (r.status === "pendiente" || r.status === "en progreso")).length;
+      const active = mine.filter(r => { const n = String(r.status||'').toLowerCase().replace(/_/g,' '); return n === 'pendiente' || n === 'en progreso'; }).length;
       const offersReceived = mine.reduce((acc, r) => acc + (Array.isArray(r.offers) ? r.offers.length : 0), 0);
       const accepted = mine.filter(r => !!r.acceptedOfferId).length;
       return { active, offersReceived, accepted };
     }
     if (role === "provider") {
-      const activeAvail = available.filter(r => (r.status === "pendiente" || r.status === "en progreso")).length;
+      const activeAvail = available.filter(r => { const n = String(r.status||'').toLowerCase().replace(/_/g,' '); return n === 'pendiente' || n === 'en progreso'; }).length;
       const myOffersSent = all.reduce((acc, r) => {
         const offers = Array.isArray(r.offers) ? r.offers : [];
         return acc + offers.filter(o => o.providerId === me).length;
@@ -248,7 +277,7 @@ export default function Home() {
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-4 shadow-xl backdrop-blur">
                 <div className="text-xs text-indigo-200/80">En progreso</div>
-                <div className="mt-1 text-2xl font-extrabold text-white/95">{all.filter(r => r.status === "en progreso").length}</div>
+                <div className="mt-1 text-2xl font-extrabold text-white/95">{all.filter(r => String(r.status||'').toLowerCase().replace(/_/g,' ') === "en progreso").length}</div>
               </div>
             </>
           )}

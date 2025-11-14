@@ -1,0 +1,30 @@
+[
+  {
+    "q": "¿Cómo inicio sesión?",
+    "a": "Desde el menú, ve a Iniciar sesión (ruta /login). Ingresa tu email o usuario y contraseña y presiona Entrar. Si las credenciales son correctas, quedarás autenticado y podrás crear solicitudes (cliente) o publicar servicios (proveedor)."
+  },
+  {
+    "q": "¿Cómo publico una solicitud?",
+    "a": "Ve a Solicitudes → Nueva solicitud. Completa título, categoría, ubicación, presupuesto y descripción, y publica."
+  },
+  {
+    "q": "¿Cómo envío una oferta como proveedor?",
+    "a": "Abre el detalle de la solicitud y usa el formulario de ofertas: escribe un mensaje y un precio, luego Enviar."
+  },
+  {
+    "q": "¿Cómo acepto una oferta?",
+    "a": "Como cliente, en el detalle de tu solicitud verás la lista de ofertas. Usa Aceptar en la oferta elegida."
+  },
+  {
+    "q": "¿Cuándo puedo chatear?",
+    "a": "El chat se habilita cuando hay una oferta aceptada. Solo participan el cliente dueño y el proveedor ganador."
+  },
+  {
+    "q": "Estados de la solicitud",
+    "a": "pendiente: abierta a ofertas; en progreso: con oferta aceptada; completado: finalizada; cancelado: cerrada sin adjudicar."
+  },
+  {
+    "q": "¿Cómo publico un servicio?",
+    "a": "Ve a Servicios → Publicar servicio (/services/new). Completa título, categoría, precio (priceFrom), ubicación y descripción, y guarda. También puedes gestionarlos en /services/me."
+  }
+]

@@ -1,4 +1,4 @@
-// src/pages/Services.jsx
+﻿// src/pages/Services.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { currentUserKey, lsGetMyServices } from "../api";
@@ -12,7 +12,7 @@ function CLP(n) {
 export default function Services() {
   const me = currentUserKey();
   const [list, setList] = useState([]);
-
+        
   useEffect(() => {
     (async () => { try { setList(await lsGetMyServices()); } catch { setList([]); } })();
   }, []);
@@ -30,7 +30,7 @@ export default function Services() {
         <div className="mb-6 flex items-center justify-between gap-3">
           <div>
             <h1 className="text-3xl font-extrabold text-white/95">Mis servicios</h1>
-            <p className="mt-1 text-sm text-indigo-200/85">Activos: <strong>{active}</strong> · Total: <strong>{list.length}</strong></p>
+            <p className="mt-1 text-sm text-indigo-200/85">Activos: <strong>{active}</strong> Â· Total: <strong>{list.length}</strong></p>
           </div>
           <div className="flex items-center gap-2">
             <RatingBadge userId={me} />
@@ -45,7 +45,7 @@ export default function Services() {
 
         {list.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/20 p-10 text-center text-indigo-100/90">
-            Aún no has publicado servicios. ¡Comienza con tu primer aviso! ✨
+            AÃºn no has publicado servicios. Â¡Comienza con tu primer aviso! âœ¨
             <div className="mt-4">
               <Link to="/services/new" className="rounded-xl bg-white/10 px-4 py-2.5 font-semibold text-white hover:bg-white/15 border border-white/20">
                 Crear servicio
@@ -61,14 +61,27 @@ export default function Services() {
                     ${s.status === "activo" ? "border border-emerald-300/40 bg-emerald-400/10 text-emerald-200" : "border border-white/15 bg-white/[0.06] text-indigo-100/85"}`}>
                     {s.status}
                   </span>
-                  <span className="text-sm font-extrabold text-white/95">{s.priceFrom ? CLP(s.priceFrom) : "—"}</span>
+                  <span className="text-sm font-extrabold text-white/95">{s.priceFrom ? CLP(s.priceFrom) : "-"}</span>
                 </div>
                 <h3 className="truncate text-lg font-extrabold text-white/95">{s.title}</h3>
                 <div className="mt-1 text-sm text-indigo-200/85">{s.category}</div>
-                <div className="mt-1 text-sm text-indigo-200/70">{s.location || "—"}</div>
+                <div className="mt-1 text-sm text-indigo-200/70">{s.location || "-"}</div>
+                {/* Reputación del proveedor: siempre la misma para todos los servicios del mismo usuario */}
+                <div className="mt-2">
+                  <RatingBadge userId={me} />
+                </div>
                 {s.description && (
                   <p className="mt-3 line-clamp-3 text-sm text-white/90">{s.description}</p>
                 )}
+                {/* Acción única: Ver detalle */}
+                <div className="mt-4">
+                  <Link
+                    to={`/service/${s.id}`}
+                    className="rounded-xl border border-white/30 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/5"
+                  >
+                    Ver detalle
+                  </Link>
+                </div>
               </article>
             ))}
           </div>

@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
 
 
@@ -27,7 +28,8 @@ class Request(models.Model):
     urgency = models.CharField(max_length=20, default='normal')
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, default='pendiente')
-    budget = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    budget = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True,
+                                 validators=[MinValueValidator(0)])
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -36,7 +38,8 @@ class Offer(models.Model):
     request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name='offers')
     provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='offers')
     message = models.TextField(blank=True)
-    price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                validators=[MinValueValidator(0)])
     status = models.CharField(max_length=20, default='pending')  # pending|accepted|rejected
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -46,7 +49,8 @@ class Service(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='services')
     title = models.CharField(max_length=200)
     category = models.CharField(max_length=120)
-    price_from = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    price_from = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                     validators=[MinValueValidator(0)])
     location = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, default='activo')
@@ -78,7 +82,6 @@ class Review(models.Model):
     request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name='reviews')
     to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_to')
     from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_from')
-    rating = models.PositiveSmallIntegerField()
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-

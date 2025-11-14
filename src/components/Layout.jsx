@@ -1,13 +1,16 @@
-// src/components/Layout.jsx
+﻿// src/components/Layout.jsx
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { isAuthed, readProfile, lsGetRequests } from "../api";
 import Notifier from "./Notifier";
+import AssistantWidget from "./AssistantWidget";
+import NotificationBell from "./NotificationBell";
 import { useEffect, useMemo, useState } from "react";
 // Proveedor de toasts se aplica a nivel raíz (main.jsx)
 
 export default function Layout({ authed, onLogout, children }) {
   const logged = authed || isAuthed();
   const { pathname } = useLocation();
+  const isLanding = pathname === "/";
   const navigate = useNavigate();
   
   // Páginas con fondo oscuro propio (prefijos incluidos)
@@ -19,7 +22,7 @@ export default function Layout({ authed, onLogout, children }) {
   const isClient = role === "client";
   const isProvider = role === "provider";
 
-  // (opcional) refresco de conteo de requests si cambian en otra pestaña
+  // (opcional) refresco de conteo de requests si cambian en otra pestaÃ±a
   const [requestsCount, setRequestsCount] = useState(0);
   useEffect(() => { (async () => { try {
     const list = await lsGetRequests();
@@ -77,7 +80,8 @@ export default function Layout({ authed, onLogout, children }) {
 
   return (
     <div className="min-h-screen text-slate-900">
-        <Notifier />
+        <Notifier intervalMs={5000} />
+        <AssistantWidget />
         {/* Navbar */}
         <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
           <nav className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
@@ -91,7 +95,7 @@ export default function Layout({ authed, onLogout, children }) {
 
             {/* Navegación izquierda */}
             <div className="flex items-center gap-1">
-              <NavLink to="/home" className={navClass}>Home</NavLink>
+              {logged && <NavLink to="/home" className={navClass}>Home</NavLink>}
               {/* Navegación izquierda (dentro del bloque ya existente) */}
 {logged && isProvider && (
   <>
@@ -130,25 +134,13 @@ export default function Layout({ authed, onLogout, children }) {
 
             {/* Píldora de rol con avatar */}
             <RolePill />
+            {logged && <NotificationBell />}
 
             {/* Acciones derechas */}
-            <div className="flex items-center gap-2">
-              {logged ? (
-                <button
-                  onClick={() => {
-                    onLogout?.();
-                    navigate("/login", { replace: true });
-                  }}
-                  className="px-3 py-1.5 rounded-lg text-slate-700 hover:bg-slate-100"
-                >
-                  Cerrar sesión
-                </button>
-              ) : (
-                <NavLink to="/login" className={navClass}>Iniciar sesión</NavLink>
-              )}
-            </div>
+            <div className="flex items-center gap-2"> {!logged && (<NavLink to="/register" className={navClass}>Registrarse</NavLink>)} {logged ? ( <button onClick={() => { onLogout?.(); navigate("/", { replace: true }); }} className="px-3 py-1.5 rounded-lg text-slate-700 hover:bg-slate-100" > Cerrar sesión </button> ) : ( <NavLink to="/login" className={navClass}>Iniciar sesión</NavLink> )} </div>
           </nav>
         </header>
+        
 
         {/* Contenido */}
         <main className={isDarkPage ? "pt-20 bg-transparent" : "bg-slate-50 pt-20"}>
@@ -156,25 +148,12 @@ export default function Layout({ authed, onLogout, children }) {
         </main>
 
         {/* Footer */}
-        <footer className="relative mt-10">
-          <div className="absolute -top-6 left-0 w-full overflow-hidden leading-[0]">
-            <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="h-12 w-full rotate-180 -mb-px">
-              <path d="M0,64 C240,128 480,0 720,16 C960,32 1200,112 1440,64 L1440,0 L0,0 Z" fill="url(#footerGradient)" />
-              <defs>
-                <linearGradient id="footerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#312e81" />
-                  <stop offset="50%" stopColor="#3730a3" />
-                  <stop offset="100%" stopColor="#1e3a8a" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-          <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-blue-900">
-            <div className="mx-auto max-w-6xl px-4 py-8 text-center text-sm text-white">
-              Hecho con amor <span className="align-middle">❤️</span>
-            </div>
-          </div>
-        </footer>
-      </div>
+<footer className="relative mt-1 bg-white"> {!isLanding && ( <div className="absolute -top-1 left-0 w-full overflow-hidden leading-[0]" aria-hidden> <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="h-12 w-full"> <path d="M0,64 C240,128 480,0 720,16 C960,32 1200,112 1440,64 L1440,0 L0,0 Z" fill="#ffffff" /> </svg> </div> )} <div className="mx-auto max-w-6xl px-4 py-8 text-center text-sm text-slate-600"> Hecho con amor <span className="align-middle">❤️</span><br></br><a href="mailto:soporte@fixly.test" className="text-sky-700 hover:underline">soporte@fixly.test</a> · <a href="tel:+56987654321" className="text-sky-700 hover:underline">+56 9 8765 4321</a> </div> </footer>      </div>
     );
 }
+
+
+
+
+
+

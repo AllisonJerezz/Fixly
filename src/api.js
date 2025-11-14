@@ -68,13 +68,53 @@ export function logout() {
 export function readProfile() {
   try { return JSON.parse(localStorage.getItem(K.PROFILE) || "null"); } catch { return null; }
 }
+function mergeWithPrevIdentity(profile) {
+const u = getAuthUsername();
+let prev = null;
+try { prev = JSON.parse(localStorage.getItem(K.PROFILE) || "null"); } catch {}
+const merged = { ...(prev || {}), ...(profile || {}) };
+if (!merged.id && u) {
+try {
+const ns = JSON.parse(localStorage.getItem(K.PROFILE_NS(u)) || "null");
+if (ns && ns.id) merged.id = ns.id;
+if (ns && ns.username && !merged.username) merged.username = ns.username;
+if (ns && ns.email && !merged.email) merged.email = ns.email;
+} catch {}
+}
+return merged;
+}
+
 export function saveProfile(profile) {
-  const u = getAuthUsername();
-  const raw = JSON.stringify(profile || {});
-  localStorage.setItem(K.PROFILE, raw);
-  if (u) localStorage.setItem(K.PROFILE_NS(u), raw);
-  // Intento de sincronizaciÃƒÂ³n con backend (no bloqueante)
-  (async () => { try { await _fetchJSON('/profile', { method: 'PUT', body: profile }); } catch {} })();
+const u = getAuthUsername();
+const merged = mergeWithPrevIdentity(profile);
+const raw = JSON.stringify(merged || {});
+localStorage.setItem(K.PROFILE, raw);
+if (u) localStorage.setItem(K.PROFILE_NS(u), raw);
+// Sincroniza y refresca cache con id completo (no bloqueante)
+(async () => {
+try {
+await _fetchJSON('/profile', { method: 'PUT', body: profile });
+try {
+const me = await _fetchJSON('/profile');
+const cache = me?.profile
+? { id: me.id, ...me.profile, username: me.username, email: me.email }
+: { id: me?.id, username: me?.username, email: me?.email };
+const fullRaw = JSON.stringify(cache || {});
+localStorage.setItem(K.PROFILE, fullRaw);
+const uu = getAuthUsername();
+if (uu) localStorage.setItem(K.PROFILE_NS(uu), fullRaw);
+} catch {}
+} catch {}
+})();
+}
+
+// Obtiene rápidamente el ID del usuario autenticado desde el backend
+export async function fetchMyProfile() {
+  try { return await _fetchJSON('/profile'); } catch { return null; }
+}
+export async function fetchMyId() {
+  const p = await fetchMyProfile();
+  return p?.id || '';
 }
 export function hasOnboardingDone() {
   const u = getAuthUsername();
@@ -88,7 +128,7 @@ export function setOnboardingDone() {
   if (u) localStorage.setItem(K.DONE_NS(u), "1");
 }
 
-/* -------- Auth endpoints (ahora con validaciÃƒÂ³n real) -------- */
+/* -------- Auth endpoints (ahora con validación real) -------- */
 async function registerLocal({ username, email, password }) {
   const u = String(username || "").trim().toLowerCase();
   const e = String(email || "").trim().toLowerCase();
@@ -120,7 +160,7 @@ async function loginLocal(userOrEmail, password) {
   const account = byUser || byEmail;
 
   if (!account || account.password !== p) {
-    throw new Error("Credenciales invÃƒÂ¡lidas");
+    throw new Error("Credenciales inválidas");
   }
 
   // Autentica y sincroniza perfil + onboarding previos
@@ -230,7 +270,7 @@ export async function lsRejectOffer(requestId, offerId) {
   return await lsGetRequestById(requestId);
 }
 
-/* Alias ÃƒÂºtil usado en otros archivos */
+/* Alias útil usado en otros archivos */
 export const createRequest = lsCreateRequest;
 
 // --- PERFIL DE OTRO USUARIO (por usernameLower) ---
@@ -260,7 +300,7 @@ export function lsCreateLead({ serviceId, providerId, message, contact }) {
     providerId: String(providerId || ""),
     clientId: String(clientId || ""),
     message: String(message || ""),
-    contact: String(contact || ""), // opcional: email/telÃƒÂ©fono
+    contact: String(contact || ""), // opcional: email/teléfono
     createdAt: new Date().toISOString(),
     status: "nuevo", // nuevo | visto | respondido
   };
@@ -270,7 +310,7 @@ export function lsCreateLead({ serviceId, providerId, message, contact }) {
   return item;
 }
 
-/** Leads recibidos por el proveedor autenticado (para futuro Ã¢â‚¬Å“bandeja de entradaÃ¢â‚¬Â) */
+/** Leads recibidos por el proveedor autenticado */
 export function lsGetMyLeads() {
   const me = currentUserKey();
   return _readLeads().filter(x => x.providerId === me);
@@ -305,25 +345,41 @@ export async function chatSendMessage(requestId, text) {
     throw new Error('No autorizado.');
   }
   return await _fetchJSON(`/chats/${requestId}/messages`, { method: 'POST', body: { text } });
-}const REVIEWS_KEY = "reviews";
+}
+
+/* ===================== ASSISTANT (IA LOCAL) ===================== */
+export async function assistantChat({ message, history = [] }) {
+  if (!String(message || '').trim()) throw new Error('Ingresa un mensaje');
+  return await _fetchJSON('/assistant/chat', { method: 'POST', body: { message, history } });
+}
+
+const REVIEWS_KEY = "reviews";
 
 function _readReviews(){ try { return JSON.parse(localStorage.getItem(REVIEWS_KEY) || "[]"); } catch { return []; } }
 function _writeReviews(arr){ localStorage.setItem(REVIEWS_KEY, JSON.stringify(arr || [])); }
 
-export function lsAddReview({ requestId, toUserId, fromUserId, rating, comment }) {
-  const list = _readReviews();
-  const item = {
-    id: String(Date.now()),
-    requestId: String(requestId),
-    toUserId: String(toUserId || ""),
-    fromUserId: String(fromUserId || ""),
-    rating: Math.max(1, Math.min(5, Number(rating) || 0)),
-    comment: String(comment || "").trim(),
-    createdAt: new Date().toISOString(),
-  };
-  list.push(item);
-  _writeReviews(list);
-  return item;
+export async function lsAddReview({ requestId, toUserId, fromUserId, rating, comment }) {
+  // Intento real contra backend
+  try {
+    const body = { request: requestId, to_user: toUserId, rating: Number(rating), comment: String(comment || '').trim() };
+    const res = await _fetchJSON('/reviews', { method: 'POST', body });
+    return res;
+  } catch (e) {
+    // Fallback a localStorage si el backend no está disponible
+    const list = _readReviews();
+    const item = {
+      id: String(Date.now()),
+      requestId: String(requestId),
+      toUserId: String(toUserId || ""),
+      fromUserId: String(fromUserId || ""),
+      rating: Math.max(1, Math.min(5, Number(rating) || 0)),
+      comment: String(comment || "").trim(),
+      createdAt: new Date().toISOString(),
+    };
+    list.push(item);
+    _writeReviews(list);
+    return item;
+  }
 }
 
 export function lsGetReviewsForUser(userId) {
@@ -331,10 +387,23 @@ export function lsGetReviewsForUser(userId) {
   return _readReviews().filter(r => r.toUserId === id);
 }
 
-export function lsHasReviewFromUserForRequest({ requestId, fromUserId }) {
+export async function lsHasReviewFromUserForRequest({ requestId, fromUserId, providerId }) {
   const req = String(requestId);
+  // Intento real contra backend si tengo providerId
+  if (providerId) {
+    try {
+      const meId = await fetchMyId();
+      const base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+      const r = await fetch(`${base}/users/${providerId}/reviews`);
+      const arr = await r.json();
+      if (r.ok && Array.isArray(arr)) {
+        return arr.some((x) => String(x.request) === req && String(x.from_user) === String(meId));
+      }
+    } catch {}
+  }
+  // Fallback local
   const from = String(fromUserId || "");
-  return _readReviews().some(r => r.requestId === req && r.fromUserId === from);
+  return _readReviews().some((r) => r.requestId === req && r.fromUserId === from);
 }
 
 export function lsGetUserRatingStats(userId) {
@@ -344,7 +413,7 @@ export function lsGetUserRatingStats(userId) {
   return { count, avg };
 }
 
-// --- AutenticaciÃƒÂ³n con backend ---
+// --- Autenticación con backend ---
 export async function register({ username, email, password }) {
   const u = String(username || "").trim().toLowerCase();
   const e = String(email || "").trim().toLowerCase();
@@ -358,7 +427,17 @@ export async function login(userOrEmail, password) {
   const id = String(userOrEmail || "").trim().toLowerCase();
   const p = String(password || "");
   if (!id || !p) throw new Error('Faltan credenciales');
-  const data = await _fetchJSON('/auth/login', { method: 'POST', body: { userOrEmail: id, password: p } });
+  let data;
+  try {
+    data = await _fetchJSON('/auth/login', { method: 'POST', body: { userOrEmail: id, password: p } });
+  } catch (e) {
+    const msg = String(e?.message || '').toLowerCase();
+    if (msg.includes('no verificado')) {
+      // Disparar envío de verificación en background
+      try { await sendVerification({ userOrEmail: id }); } catch {}
+    }
+    throw e;
+  }
   const username = data?.user?.username || id;
   const token = data?.token || '';
   setAuth(username, token);
@@ -386,4 +465,18 @@ export async function fetchProfileAndCache(){
   const u = getAuthUsername();
   if (u) localStorage.setItem(K.PROFILE_NS(u), raw);
   return cache;
+}
+
+// ===== Verificación de email =====
+export async function sendVerification({ userOrEmail } = {}) {
+  try {
+    return await _fetchJSON('/auth/send-verification', { method: 'POST', body: userOrEmail ? { userOrEmail } : {} });
+  } catch (e) {
+    return { ok: false, error: e?.message || 'No se pudo enviar verificación' };
+  }
+}
+
+export async function verifyEmail(uid, token) {
+  const q = `uid=${encodeURIComponent(uid)}&token=${encodeURIComponent(token)}`;
+  return await _fetchJSON(`/auth/verify?${q}`);
 }

@@ -1,13 +1,16 @@
-// src/components/Login.jsx
+﻿// src/components/Login.jsx
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { login } from "../api";
+import { login, sendVerification, fetchProfileAndCache, hasOnboardingDone } from "../api";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const [hint, setHint] = useState("");
+  const [sending, setSending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,16 +26,34 @@ export default function Login() {
     setForm((f) => ({ ...f, [name]: value }));
   }
 
+  useEffect(() => {
+    const msg = String(err || '').toLowerCase();
+    if (msg.includes('no verificado')) {
+      setHint('Tu email no está verificado. Revisa tu bandeja o reenvía el correo de confirmación.');
+    } else {
+      setHint('');
+    }
+  }, [err]);
+
+  // cooldown del botón Reenviar
+  useEffect(() => {
+    if (!cooldown) return;
+    const t = setInterval(() => setCooldown((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [cooldown]);
+
   async function submit(e) {
     e.preventDefault();
     setErr("");
     try {
       setLoading(true);
-      // 👇 ahora pasamos usuario/email y contraseña por separado
+      
       await login(form.email, form.password);
-      navigate("/home", { replace: true });
+      try { await fetchProfileAndCache(); } catch {}
+      const go = hasOnboardingDone() ? "/home" : "/onboarding";
+      navigate(go, { replace: true });
     } catch (e) {
-      // 👇 muestra la razón real (p.ej. "Credenciales inválidas")
+      
       setErr(e?.message || "No se pudo iniciar sesión. Intenta nuevamente.");
     } finally {
       setLoading(false);
@@ -47,34 +68,37 @@ export default function Login() {
       <div className="pointer-events-none absolute -left-28 top-24 h-72 w-72 rounded-full bg-indigo-600/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-10 h-80 w-80 rounded-full bg-sky-500/10 blur-2xl" />
 
-      <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl grid-cols-1 items-center gap-10 px-4 py-16 text-white lg:grid-cols-2">
-        {/* Columna imagen (izquierda) */}
-        <div className="hidden place-items-center lg:grid">
-          <div className="relative">
-            <img
-              src={"/Login.png"}
-              onError={(e) => {
-                e.currentTarget.src =
-                  "https://images.unsplash.com/photo-1600880292240-98eac1f9b9f7?q=80&w=1200&auto=format&fit=crop";
-              }}
-              alt="Inicio de sesión en Fixly"
-              className="w-[400px] max-w-full rounded-tl-[72px] rounded-br-[72px] rounded-tr-2xl rounded-bl-2xl border border-white/20 shadow-2xl"
-            />
-            <div className="pointer-events-none absolute -right-10 -top-8 h-28 w-28 rounded-full bg-sky-400/20 blur-2xl" />
-          </div>
-        </div>
-
-        {/* Columna form (derecha) */}
+      <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-md grid-cols-1 items-center gap-6 px-4 py-16 text-white">
+        {/* Form centrado */}
         <div className="w-full">
           <div className="rounded-3xl border border-white/15 bg-white/10 p-8 shadow-2xl backdrop-blur">
             <div className="mb-6 text-center">
               <h1 className="text-3xl font-extrabold leading-tight">Iniciar sesión</h1>
-              <p className="mt-1 text-sm text-indigo-100/90">Bienvenido(a) de vuelta 👋</p>
+              <p className="mt-1 text-sm text-indigo-100/90">Bienvenido(a) de vuelta</p>
             </div>
 
             {err && (
               <div className="mb-4 rounded-xl border border-rose-300/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-100">
                 {err}
+              </div>
+            )}
+
+            {hint && (
+              <div className="mb-4 rounded-xl border border-amber-300/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                <div className="flex items-center justify-between gap-3">
+                  <span>{hint}</span>
+                  <button
+                    type="button"
+                    disabled={sending || cooldown>0}
+                    onClick={async () => {
+                      if (cooldown>0) return;
+                      setSending(true);
+                      try { await sendVerification({ userOrEmail: form.email }); setCooldown(60); } catch {}
+                      setSending(false);
+                    }}
+                    className="rounded-lg border border-amber-300/30 bg-amber-400/20 px-3 py-1.5 text-xs font-semibold text-amber-50 hover:bg-amber-400/30 disabled:opacity-60"
+                  >{sending ? 'Enviando…' : (cooldown>0 ? `Reenviar (${cooldown}s)` : 'Reenviar correo')}</button>
+                </div>
               </div>
             )}
 
@@ -100,7 +124,7 @@ export default function Login() {
                     type={showPwd ? "text" : "password"}
                     value={form.password}
                     onChange={onChange}
-                    placeholder="••••••••"
+                    placeholder="***********"
                     required
                     className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 pr-10 text-white placeholder:text-white/70 outline-none focus:ring-2 focus:ring-sky-300/40"
                   />
@@ -135,3 +159,5 @@ export default function Login() {
     </section>
   );
 }
+
+

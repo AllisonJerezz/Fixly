@@ -9,17 +9,29 @@ import {
   lsUpsertMyOffer,
   lsAcceptOffer,
   lsRejectOffer,
+  lsDeleteRequest,
   isOwner,
   currentUserKey,
   readProfile,
+  readProfileOf,
 } from "../api";
 import { lsHasReviewFromUserForRequest, lsAddReview } from "../api";
 import StatusBadge from "../components/StatusBadge";
 import { useToast } from "../components/Toast";
+import ConfirmModal from "../components/ConfirmModal";
 
 function CLP(n) {
   const v = Number(n || 0);
   return v.toLocaleString("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
+}
+
+// Mapea estados de oferta a español
+function offerStatusLabel(val){
+  const s = String(val||'').toLowerCase();
+  if (s === 'accepted') return 'aceptada';
+  if (s === 'rejected') return 'rechazada';
+  if (s === 'pending' || s === '') return 'pendiente';
+  return s;
 }
 
 export default function RequestDetail() {
@@ -41,11 +53,13 @@ export default function RequestDetail() {
     price: myOfferInitial?.price || "",
   });
   const [savingOffer, setSavingOffer] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
 
   // Estado para reseñas (debe ejecutarse en todos los renders)
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [hoverRating, setHoverRating] = useState(0);
 
   // Verificar si ya existe reseña cuando hay ganador y soy dueño (cliente)
   useEffect(() => {
@@ -61,7 +75,7 @@ export default function RequestDetail() {
         const providerWinnerId = accepted?.providerId || "";
         const meIdNow = currentUserKey?.() || "guest";
         if (isClientOwnerNow && providerWinnerId) {
-          const done = await lsHasReviewFromUserForRequest({ requestId: req.id, fromUserId: meIdNow });
+          const done = await lsHasReviewFromUserForRequest({ requestId: req.id, fromUserId: meIdNow, providerId: providerWinnerId });
           setAlreadyReviewed(!!done);
         }
       } catch {}
@@ -84,7 +98,7 @@ export default function RequestDetail() {
         setOffer({ message: mine?.message || "", price: mine?.price || "" });
       } catch (e) {
         // Si el backend no responde, evitamos romper el render
-        console.warn("lsMyOffer falló:", e?.message || e);
+        console.warn("lsMyOffer falla:", e?.message || e);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -120,16 +134,18 @@ export default function RequestDetail() {
   })();
   const myOffer = myOfferInitial;
   const isProvider = profile?.role === "provider" && !ownerView;
+  const norm = (s) => String(s || '').toLowerCase().replace(/_/g, ' ');
+  const isCompleted = ['completado','finalizado','cerrado','completed','done'].includes(norm(req?.status));
   const isClientOwner = ownerView && profile?.role === "client";
   const providerWinnerId = accepted?.providerId || "";
   const meId = currentUserKey?.() || "guest";
 
-  // Reseñas del cliente hacia el proveedor ganador
+  // ReseÃ±as del cliente hacia el proveedor ganador
   // moved: const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   // moved: const [rating, setRating] = useState(5);
   // moved: const [comment, setComment] = useState("");
 
-  // moved: useEffect para verificar reseña se declaró antes del return condicional
+  // moved: useEffect para verificar reseña se declar antes del return condicional
 
   async function handleAccept(offerId) {
     setErr(""); setOk("");
@@ -139,8 +155,8 @@ export default function RequestDetail() {
       show("No se pudo aceptar la oferta", { type: "error" });
       return;
     }
-    setOk("Oferta aceptada ✅");
-    show("Oferta aceptada ✅", { type: "success" });
+    setOk("Oferta aceptada âœ…");
+    show("Oferta aceptada âœ…", { type: "success" });
     refresh();
   }
 
@@ -168,6 +184,16 @@ export default function RequestDetail() {
     setOk("Estado actualizado.");
     show("Estado actualizado", { type: "success" });
     refresh();
+  }
+
+  async function handleDelete() {
+    try {
+      await lsDeleteRequest(req.id);
+      show("Solicitud eliminada", { type: "success" });
+      navigate("/requests", { replace: true });
+    } catch (e) {
+      show(e?.message || "No se pudo eliminar", { type: "error" });
+    }
   }
 
   async function submitReview() {
@@ -261,15 +287,15 @@ export default function RequestDetail() {
             <Link to="/requests" className="rounded-xl border border-white/30 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/5">
               Volver
             </Link>
-            {ownerView && req.status !== "completado" && (
+            {ownerView && norm(req.status) !== "completado" && (
               <button
-                onClick={() => handleClose(req.status === "en progreso" ? "completado" : "en progreso")}
+                onClick={() => handleClose(norm(req.status) === "en progreso" ? "completado" : "en progreso")}
                 className="rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400"
               >
-                {req.status === "en progreso" ? "Marcar como completado" : "Marcar en progreso"}
+                {norm(req.status) === "en progreso" ? "Marcar como completado" : "Marcar en progreso"}
               </button>
             )}
-            {/* Botón para abrir chat cuando hay oferta aceptada y soy participante */}
+            {/* BotÃ³n para abrir chat cuando hay oferta aceptada y soy participante */}
             {accepted && (ownerView || myOffer?.status === "accepted") && (
               <Link
                 to={`/chat/${req.id}`}
@@ -297,7 +323,7 @@ export default function RequestDetail() {
                 <InfoBox label="Estado" value={<StatusBadge status={req.status || "pendiente"} />} />
               </div>
 
-              {/* Línea extra para mostrar origen si existe */}
+              {/* LÃ­nea extra para mostrar origen si existe */}
               {hasPreference && (
                 <div className="mt-3 rounded-xl border border-amber-300/30 bg-amber-400/5 p-3 text-sm text-amber-100">
                   Origen de esta solicitud:&nbsp;
@@ -328,7 +354,7 @@ export default function RequestDetail() {
 
               {offers.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-white/20 p-8 text-center text-indigo-100/90">
-                  {ownerView ? "Aún no tienes ofertas. Cuando lleguen, podrás verlas aquí y aceptar la mejor." : "Sé el primero en ofertar. ¡Envía tu propuesta! ✨"}
+                  {ownerView ? "Aún no tienes ofertas. Cuando lleguen, podrás verlas aquí­ y aceptar la mejor." : "Sé el primero en ofertar. ¡Enví­a tu propuesta!"}
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -391,10 +417,10 @@ export default function RequestDetail() {
                 </form>
                 {accepted && myOffer && (
                   <p className="mt-3 text-sm text-indigo-200/85">
-                    Estado de tu oferta: <strong className="capitalize">{myOffer.status || "pending"}</strong>
+                    Estado de tu oferta: <strong className="capitalize">{offerStatusLabel(myOffer.status)}</strong>
                   </p>
                 )}
-                {accepted && isClientOwner && req.status === "completado" && (
+                {accepted && isClientOwner && norm(req.status) === "completado" && (
                   <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4">
                     <div className="mb-2 text-sm font-bold text-white/90">Calificar proveedor</div>
                     {alreadyReviewed ? (
@@ -424,7 +450,7 @@ export default function RequestDetail() {
                           onChange={(e) => setComment(e.target.value)}
                           className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
                         />
-                        <button onClick={submitReview} className="rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400">Enviar reseña</button>
+                        <button onClick={submitReview} className="rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400">Enviar reseÃ±a</button>
                       </div>
                     )}
                   </div>
@@ -433,9 +459,10 @@ export default function RequestDetail() {
             ) : (
               <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-6 shadow-2xl backdrop-blur">
                 <h3 className="text-lg font-extrabold text-white/95">Resumen</h3>
+                
                 <div className="mt-3 grid gap-2">
-                  <InfoRow label="Categoría" value={req.category || "-"} />
-                  <InfoRow label="Ubicación" value={req.location || "-"} />
+                  <InfoRow label="CategorÃ­a" value={req.category || "-"} />
+                  <InfoRow label="UbicaciÃ³n" value={req.location || "-"} />
                   <InfoRow label="Urgencia" value={req.urgency || "normal"} />
                   <InfoRow label="Presupuesto" value={req.budget ? CLP(req.budget) : "-"} />
                 </div>
@@ -447,12 +474,66 @@ export default function RequestDetail() {
                     >
                       Editar solicitud
                     </button>
+                    <button
+                      onClick={() => setConfirmDel(true)}
+                      className="rounded-xl border border-rose-400/50 bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-100 hover:bg-rose-500/20"
+                    >
+                      Eliminar solicitud
+                    </button>
                   </div>
                 )}
+                {accepted && isClientOwner && (
+isCompleted ? (
+<div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+<div className="mb-2 text-sm font-bold text-white/90">Calificar proveedor</div>
+
+  {alreadyReviewed ? (
+    <div className="text-sm text-indigo-200/85">Ya enviaste una reseña para esta solicitud.</div>
+  ) : (
+    <>
+      <div className="flex items-center gap-1"> {[1, 2, 3, 4, 5].map((n) => { const filled = n <= (hoverRating || rating); return ( <button key={n} type="button" onClick={() => setRating(n)} onMouseEnter={() => setHoverRating(n)} onMouseLeave={() => setHoverRating(0)} className="p-1" aria-label={`${n} estrellas`} aria-pressed={n <= rating} title={`${n} estrellas`} > <svg viewBox="0 0 24 24" className={filled ? "h-7 w-7 text-amber-400 drop-shadow" : "h-7 w-7 text-white/40"} fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth={filled ? 0 : 1.8} > <path d="M12 3.6l2.57 5.21 5.75.84-4.16 4.05.98 5.72L12 16.98 6.86 20.4l.98-5.72-4.16-4.05 5.75-.84L12 3.6z" /> </svg> </button> ); })} <span className="ml-2 text-sm text-indigo-200/85">{(hoverRating || rating)}/5</span> </div>
+      <textarea
+        rows={3}
+        placeholder="Escribe un comentario (opcional)"
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        className="mt-3 w-full rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
+      />
+
+      <button
+        onClick={submitReview}
+        className="mt-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400"
+      >
+        Enviar reseña
+      </button>
+    </>
+  )}
+</div>
+) : (
+<div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+<div className="mb-2 text-sm font-semibold text-white/90">
+Para calificar, marca la solicitud como completada.
+</div>
+<button
+className="rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400"
+onClick={async () => {
+try { await lsUpdateRequest(req.id, { status: 'completado' }); await refresh(); } catch {}
+}}
+>
+Marcar como completada
+</button>
+</div>
+)
+)}
               </div>
             )}
           </aside>
         </div>
+        <RequestDetailConfirm
+          open={confirmDel}
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmDel(false)}
+        />
       </div>
     </section>
   );
@@ -477,12 +558,70 @@ function InfoRow({ label, value }) {
 }
 
 function OfferCard({ offer, isWinner, canDecide, onAccept, onReject, me }) {
+  function resolveName(key){
+    const k = String(key||'').trim();
+    if (!k) return '';
+    try {
+      const mep = readProfile?.();
+      if (mep && (String(mep.id) === k || String(mep.username||'').toLowerCase() === k.toLowerCase())) {
+        return mep.displayName || mep.username || k;
+      }
+    } catch {}
+    if (k.includes('-')) {
+      try {
+        for (let i=0;i<localStorage.length;i++){
+          const kk = localStorage.key(i);
+          if (kk && kk.startsWith('profile:')){
+            try{
+              const p = JSON.parse(localStorage.getItem(kk) || 'null');
+              if (p && String(p.id) === k) return p.displayName || p.username || k;
+            }catch{}
+          }
+        }
+      } catch {}
+      return 'Proveedor';
+    }
+    try {
+      const p = JSON.parse(localStorage.getItem(`profile:${k.toLowerCase()}`) || 'null');
+      return p?.displayName || p?.username || k;
+    } catch { return k; }
+  }
+  const providerName = offer?.providerName || resolveName(offer?.providerId || "");
+  const providerPhoto = (() => {
+    if (offer?.providerPhoto) return offer.providerPhoto;
+    const k = String(offer?.providerId || '').trim();
+    if (!k) return '';
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const kk = localStorage.key(i);
+        if (kk && kk.startsWith('profile:')) {
+          try {
+            const p = JSON.parse(localStorage.getItem(kk) || 'null');
+            if (p && String(p.id) === k) return p.photoURL || p.photo_url || '';
+          } catch {}
+        }
+      }
+    } catch {}
+    return '';
+  })();
+  function offerStatusLabel(val){
+    const s = String(val||'').toLowerCase();
+    if (s === 'accepted') return 'aceptada';
+    if (s === 'rejected') return 'rechazada';
+    if (s === 'pending' || s === '') return 'pendiente';
+    return s;
+  }
   return (
     <div className={["rounded-2xl border p-4 shadow-xl backdrop-blur", isWinner ? "border-emerald-300/40 bg-emerald-400/10" : "border-white/10 bg-white/[0.05]"].join(" ")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2 text-[11px] text-indigo-200/80">
-            <span>Proveedor: <strong className="text-white/95">{offer.providerId || "-"}</strong></span>
+            <span className="inline-flex items-center gap-1.5">Proveedor:{' '}
+              {providerPhoto ? (
+                <img src={providerPhoto} alt={providerName} className="h-4 w-4 rounded-full object-cover ring-1 ring-black/10" />
+              ) : null}
+              <strong className="text-white/95">{providerName}</strong>
+            </span>
             {offer.providerId === me && (
               <span className="rounded-full border border-white/10 bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-semibold text-indigo-100/90">Tu oferta</span>
             )}
@@ -494,7 +633,7 @@ function OfferCard({ offer, isWinner, canDecide, onAccept, onReject, me }) {
         <div className="shrink-0 text-right">
           <div className="text-xs uppercase tracking-wide text-indigo-200/80">Precio</div>
           <div className="text-lg font-extrabold text-white/95">{CLP(offer.price)}</div>
-          <div className="mt-1 text-[11px] capitalize text-indigo-200/80">Estado: {offer.status || "pending"}</div>
+          <div className="mt-1 text-[11px] capitalize text-indigo-200/80">Estado: {offerStatusLabel(offer.status)}</div>
         </div>
       </div>
 
@@ -507,7 +646,7 @@ function OfferCard({ offer, isWinner, canDecide, onAccept, onReject, me }) {
             Oferta ganadora
           </span>
         ) : (
-          <span className="text-[11px] text-indigo-200/80">Status: {offer.status || "pending"}</span>
+          <span className="text-[11px] text-indigo-200/80">Estado: {offerStatusLabel(offer.status)}</span>
         )}
 
         {canDecide && !isWinner && (
@@ -525,7 +664,18 @@ function OfferCard({ offer, isWinner, canDecide, onAccept, onReject, me }) {
   );
 }
 
-
-
-
-
+// Modal de confirmación (se monta al final para evitar stacking issues)
+// Render conditionally via confirmDel state above
+export function RequestDetailConfirm({ open, onConfirm, onCancel }) {
+  return (
+    <ConfirmModal
+      open={open}
+      title="Eliminar solicitud"
+      message="Esta acción no se puede deshacer. ¿Deseas continuar?"
+      confirmText="Eliminar"
+      cancelText="Cancelar"
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+    />
+  );
+}

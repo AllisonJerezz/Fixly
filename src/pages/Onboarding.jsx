@@ -1,4 +1,4 @@
-// src/pages/Onboarding.jsx
+﻿// src/pages/Onboarding.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { saveProfile, setOnboardingDone, readProfile } from "../api";
@@ -17,8 +17,8 @@ export default function Onboarding({ onFinish }) {
     displayName: stored.displayName || "",
     role: stored.role || "", // "client" | "provider"
     categories: Array.isArray(stored.categories) ? stored.categories : [],
-    // photoURL no es obligatorio guardarlo aquí, AvatarPicker lo persiste directo,
-    // pero lo mantenemos en memoria para la confirmación final si ya existe.
+    // photoURL no es obligatorio guardarlo aquÃ­, AvatarPicker lo persiste directo,
+    // pero lo mantenemos en memoria para la Confirmación final si ya existe.
     photoURL: stored.photoURL || "",
   });
 
@@ -39,7 +39,7 @@ export default function Onboarding({ onFinish }) {
       return;
     }
     if (step === 2 && form.role === "provider" && (!form.categories || form.categories.length === 0)) {
-      setErr("Selecciona al menos una categoría si eres proveedor.");
+      setErr("Selecciona al menos una categorÃ­a si eres proveedor.");
       return;
     }
     setStep((s) => Math.min(s + 1, steps.length - 1));
@@ -48,10 +48,6 @@ export default function Onboarding({ onFinish }) {
   function back() {
     setErr("");
     setStep((s) => Math.max(s - 1, 0));
-  }
-
-  function goTo(ix) {
-    if (ix <= step) setStep(ix); // no saltar hacia adelante sin validar
   }
 
   function toggleCategory(cat) {
@@ -85,7 +81,7 @@ export default function Onboarding({ onFinish }) {
 
   return (
     <section className="relative overflow-hidden">
-      {/* Fondo degradé + halos */}
+      {/* Fondo degradÃ© + halos */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#0A1540] via-[#0B1B4F] to-[#0D2266]" />
       <div className="pointer-events-none absolute -left-28 top-24 h-72 w-72 rounded-full bg-indigo-600/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-10 h-80 w-80 rounded-full bg-sky-500/5 blur-3xl" />
@@ -95,13 +91,10 @@ export default function Onboarding({ onFinish }) {
         <h1 className="mb-2 text-3xl font-extrabold text-white/95">Personaliza tu experiencia</h1>
         <p className="text-indigo-200/90">Completa tu perfil para conectar mejor con clientes o proveedores.</p>
 
-        {/* STEPPER + barra de progreso */}
+        {/* Barra de progreso */}
         <div className="mt-6">
-          <Stepper steps={steps} current={step} onStepClick={goTo} />
-          <div className="mt-3 mb-2 flex items-center justify-between text-sm">
-            <span className="text-indigo-200/85">
-              Paso {step + 1} de {steps.length} • {steps[step]}
-            </span>
+          <div className="mb-2 flex items-center justify-between text-sm text-indigo-200/85">
+            <span>Progreso</span>
             <span className="font-semibold text-white/95">{pct}%</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full border border-white/10 bg-white/[0.06] backdrop-blur">
@@ -149,14 +142,14 @@ export default function Onboarding({ onFinish }) {
             />
           )}
 
-          {/* Navegación */}
+          {/* NavegaciÃ³n */}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <button
               onClick={back}
               disabled={step === 0}
               className="rounded-xl border border-white/30 px-5 py-2.5 font-semibold text-white hover:bg-white/5 disabled:opacity-50"
             >
-              Atrás
+              AtrÃ¡s
             </button>
 
             {step < steps.length - 1 ? (
@@ -182,68 +175,6 @@ export default function Onboarding({ onFinish }) {
         <div className="pointer-events-none mx-auto mt-6 h-16 max-w-3xl rounded-full bg-gradient-to-r from-transparent via-white/5 to-transparent blur-2xl" />
       </div>
     </section>
-  );
-}
-
-/* ================= Stepper (bolitas) ================= */
-function Stepper({ steps, current, onStepClick }) {
-  return (
-    <div className="relative">
-      {/* Línea de fondo */}
-      <div className="absolute left-0 right-0 top-1/2 h-[2px] -translate-y-1/2 bg-white/10" />
-      {/* Línea de progreso */}
-      <div
-        className="absolute left-0 top-1/2 h-[2px] -translate-y-1/2 bg-gradient-to-r from-indigo-400 to-sky-400 transition-all"
-        style={{
-          width:
-            steps.length > 1
-              ? `${(current / (steps.length - 1)) * 100}%`
-              : "0%",
-        }}
-      />
-      {/* Dots */}
-      <div className="relative z-10 grid grid-cols-4 gap-2 sm:grid-cols-4">
-        {steps.map((label, idx) => {
-          const done = idx < current;
-          const active = idx === current;
-          return (
-            <button
-              key={label}
-              type="button"
-              onClick={() => onStepClick?.(idx)}
-              className="group flex flex-col items-center gap-2 outline-none"
-              aria-current={active ? "step" : undefined}
-              aria-label={`Paso ${idx + 1}: ${label}`}
-            >
-              <span
-                className={[
-                  "grid h-6 w-6 place-items-center rounded-full border text-xs font-bold transition",
-                  done
-                    ? "border-indigo-300/60 bg-indigo-400/20 text-white"
-                    : active
-                    ? "border-white/80 bg-white/20 text-white"
-                    : "border-white/20 bg-white/[0.06] text-indigo-100/80 group-hover:bg-white/[0.1]",
-                ].join(" ")}
-              >
-                {idx + 1}
-              </span>
-              <span
-                className={[
-                  "select-none text-[11px] font-semibold transition",
-                  done
-                    ? "text-indigo-100/95"
-                    : active
-                    ? "text-white/95"
-                    : "text-indigo-200/80",
-                ].join(" ")}
-              >
-                {label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
@@ -290,7 +221,7 @@ function StepRol({ role, setRole }) {
       <RoleCard
         active={role === "provider"}
         title="Proveedor"
-        desc="Explora solicitudes y envía propuestas competitivas."
+        desc="Explora solicitudes y envÃ­a propuestas competitivas."
         onClick={() => setRole("provider")}
       />
     </div>
@@ -326,12 +257,12 @@ function RoleCard({ active, title, desc, onClick }) {
 
 function StepCategorias({ role, selected, toggle }) {
   const all = [
-    "Plomería",
+    "PlomerÃ­a",
     "Electricidad",
-    "Gasfitería",
+    "GasfiterÃ­a",
     "Pintura",
-    "Carpintería",
-    "Cerrajería",
+    "CarpinterÃ­a",
+    "CerrajerÃ­a",
     "Aseo",
     "Mudanzas",
   ];
@@ -364,7 +295,7 @@ function StepCategorias({ role, selected, toggle }) {
         })}
       </div>
 
-      <Tip>Puedes cambiar tus categorías luego en “Ajustar perfil”.</Tip>
+      <Tip>Puedes cambiar tus categorí­as luego en "Ajustar perfil".</Tip>
     </div>
   );
 }
@@ -390,7 +321,7 @@ function StepConfirmacion({ form }) {
       </div>
 
       <div className="grid gap-2">
-        <Row label="Nombre a mostrar" value={form.displayName || "—"} />
+        <Row label="Nombre a mostrar" value={form.displayName || "...”"} />
         <Row
           label="Rol"
           value={
@@ -398,15 +329,15 @@ function StepConfirmacion({ form }) {
               ? "Proveedor"
               : form.role === "client"
               ? "Cliente"
-              : "—"
+              : "â€”"
           }
         />
         <Row
-          label="Categorías"
+          label="CategorÃ­as"
           value={
             form.categories && form.categories.length > 0
               ? form.categories.join(", ")
-              : "—"
+              : "â€”"
           }
         />
       </div>
@@ -434,3 +365,4 @@ function Tip({ children }) {
     </div>
   );
 }
+

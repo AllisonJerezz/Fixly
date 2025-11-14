@@ -12,12 +12,41 @@ function CLP(n) {
 }
 
 function RequestCard({ item, isClientView }) {
+  function resolveName(key){
+    const k = String(key||'').trim();
+    if (!k) return '';
+    try {
+      const me = readProfile?.();
+      if (me && (String(me.id) === k || String(me.username||'').toLowerCase() === k.toLowerCase())) {
+        return me.displayName || me.username || k;
+      }
+    } catch {}
+    if (k.includes('-')) {
+      try {
+        for (let i=0;i<localStorage.length;i++){
+          const kk = localStorage.key(i);
+          if (kk && kk.startsWith('profile:')){
+            try{
+              const p = JSON.parse(localStorage.getItem(kk) || 'null');
+              if (p && String(p.id) === k) return p.displayName || p.username || k;
+            }catch{}
+          }
+        }
+      } catch {}
+      return 'Proveedor';
+    }
+    try {
+      const p = JSON.parse(localStorage.getItem(`profile:${k.toLowerCase()}`) || 'null');
+      return p?.displayName || p?.username || k;
+    } catch { return k; }
+  }
   const offers = Array.isArray(item.offers) ? item.offers : [];
   const count = item?._count?.offers ?? offers.length;
   const accepted = item.acceptedOfferId
     ? offers.find((o) => o.id === item.acceptedOfferId)
     : offers.find((o) => String(o.status || "").toLowerCase() === "accepted") || null;
   const acceptedPrice = accepted?.price || item.acceptedPrice || null;
+  const providerName = (accepted?.providerName || item.acceptedProviderName) ?? (accepted?.providerId ? resolveName(accepted.providerId) : "");
 
   return (
     <Link
@@ -71,7 +100,13 @@ function RequestCard({ item, isClientView }) {
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div className="text-[11px] text-indigo-200/70">Creado: {new Date(item.created_at || item.createdAt || Date.now()).toLocaleString()}</div>
         <div className="text-[11px] text-indigo-100/95">
-          {accepted ? (isClientView ? `Proveedor aceptado: ${accepted.providerId}` : `Estado: en progreso`) : count > 0 ? (isClientView ? "Tienes ofertas para revisar" : "Aún en concurso") : "Sin ofertas aún"}
+          {accepted
+            ? (isClientView
+                ? (`Proveedor aceptado${providerName && providerName !== 'Proveedor' ? `: ${providerName}` : ''}`)
+                : `Estado: en progreso`)
+            : count > 0
+            ? (isClientView ? "Tienes ofertas para revisar" : "Aún en concurso")
+            : "Sin ofertas aún"}
         </div>
       </div>
     </Link>
@@ -87,6 +122,7 @@ export default function Requests() {
     (async () => { try { setAll(await lsGetRequests()); } catch { setAll([]); } })();
   }, [role]);
 
+  const norm = (s) => String(s || "").toLowerCase().replace(/_/g, " ");
   const baseList = useMemo(() => {
     if (role === "client") return all.filter((r) => isOwner(r));
     if (role === "provider") return all.filter((r) => !isOwner(r));
@@ -123,7 +159,7 @@ export default function Requests() {
       const s = q.trim().toLowerCase();
       arr = arr.filter((r) => (r.title || "").toLowerCase().includes(s) || (r.description || "").toLowerCase().includes(s));
     }
-    if (status !== "Todos") arr = arr.filter((r) => (r.status || "pendiente") === status);
+    if (status !== "Todos") arr = arr.filter((r) => norm(r.status || "pendiente") === norm(status));
     if (category !== "Todas") arr = arr.filter((r) => (r.category || "") === category);
     if (urgency !== "Todas") arr = arr.filter((r) => (r.urgency || "normal") === urgency);
     if (loc.trim()) {
@@ -261,4 +297,3 @@ export default function Requests() {
     </section>
   );
 }
-

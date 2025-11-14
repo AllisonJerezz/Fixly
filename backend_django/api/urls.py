@@ -4,6 +4,8 @@ from . import views as v
 urlpatterns = [
     path('auth/register', v.register),
     path('auth/login', v.login_view),
+    path('auth/send-verification', v.send_verification_email),
+    path('auth/verify', v.verify_email),
 
     path('profile', v.profile_view),  # GET/PUT
 
@@ -25,4 +27,8 @@ urlpatterns = [
     path('reviews', v.review_create),
     path('users/<uuid:user_id>/reviews', v.user_reviews),
     path('users/<uuid:user_id>/rating', v.user_rating),
+    path('users/<uuid:user_id>', v.user_detail),
+
+    # Assistant (Ollama local)
+    path('assistant/chat', v.assistant_chat),
 ]

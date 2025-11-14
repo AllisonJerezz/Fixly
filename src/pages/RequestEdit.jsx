@@ -253,22 +253,22 @@ export default function RequestEdit() {
             <h3 className="text-lg font-extrabold text-white/95">Estado</h3>
             <div className="mt-3 grid gap-2">
               <StateButton
-                active={form.status === "pendiente"}
+                active={String(form.status||'').toLowerCase().replace(/_/g,' ') === "pendiente"}
                 label="Pendiente"
                 onClick={() => setStatus("pendiente")}
               />
               <StateButton
-                active={form.status === "en progreso"}
+                active={String(form.status||'').toLowerCase().replace(/_/g,' ') === "en progreso"}
                 label="En progreso"
                 onClick={() => setStatus("en progreso")}
               />
               <StateButton
-                active={form.status === "completado"}
+                active={String(form.status||'').toLowerCase().replace(/_/g,' ') === "completado"}
                 label="Completado"
                 onClick={() => setStatus("completado")}
               />
               <StateButton
-                active={form.status === "cancelado"}
+                active={String(form.status||'').toLowerCase().replace(/_/g,' ') === "cancelado"}
                 label="Cancelado"
                 onClick={() => setStatus("cancelado")}
               />

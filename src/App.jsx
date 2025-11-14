@@ -1,4 +1,4 @@
-// src/App.jsx
+﻿// src/App.jsx
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 
@@ -20,6 +20,7 @@ import RequestEdit from "./pages/RequestEdit";
 import Services from "./pages/Services";
 import ServiceNew from "./pages/ServiceNew";
 import ServiceDetail from "./pages/ServiceDetail";
+import Verify from "./pages/Verify";
 
 
 import { isAuthed, logout, readProfile, hasOnboardingDone } from "./api";
@@ -59,13 +60,13 @@ export default function App() {
     logout();
     setAuthed(false);
     setProfile(null);
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   }
 
   return (
     <Layout authed={authed} onLogout={handleLogout}>
       <Routes>
-        {/* Pública */}
+        {/* PÃºblica */}
         <Route path="/" element={<Landing />} />
         <Route
           path="/login"
@@ -76,6 +77,7 @@ export default function App() {
           }
         />
         <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
+        <Route path="/verify" element={<PublicOnly><Verify /></PublicOnly>} />
 
         {/* Onboarding */}
         <Route
