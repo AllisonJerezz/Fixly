@@ -1,0 +1,443 @@
+./README.md:1:﻿# Fixly Front + Backend Django
+./README.md:4:- Frontend: React + Vite (carpeta raíz, puerto 5173)
+./README.md:15:Ejecutar (desde la raíz):
+./README.md:22:La app usará el backend si está disponible; mientras migras, hay lógica local en src/api.js.
+./README.md:26:El backend Django/DRF está en ackend_django/ con endpoints compatibles.
+./README.md:66:- Docker es opcional y no se usa aquí por defecto. Si necesitas levantar PostgreSQL con Docker, puedo dejarte un docker-compose.yml específico para Postgres.
+./README.md:67:- Si vienes de la versión Node/Express anterior, ya no se requiere nada de Node en el backend.
+./tmp_chat.jsx:1:﻿// src/pages/Chat.jsx
+./tmp_chat.jsx:164:              Chat Â· {req.title}
+./tmp_chat.jsx:207:            <div className="mb-0.5 text-[10px] opacity-70">{mapName(fromId)} • {fmtTime(m.ts)}</div>
+./tmp_chat.jsx:222:              placeholder="Escribe un mensajeâ€¦"
+./tmp_Login_old.txt:1:﻿// src/components/Login.jsximport { useEffect, useState } from "react";import { Link, useLocation, useNavigate } from "react-router-dom";import { login } from "../api";export default function Login() {  const [form, setForm] = useState({ email: "", password: "" });  const [showPwd, setShowPwd] = useState(false);  const [loading, setLoading] = useState(false);  const [err, setErr] = useState("");  const navigate = useNavigate();  const location = useLocation();  useEffect(() => {    const username = location?.state?.username;    if (username && !form.email) {      setForm((f) => ({ ...f, email: username }));    }  }, [location]);  function onChange(e) {    const { name, value } = e.target;    setForm((f) => ({ ...f, [name]: value }));  }  async function submit(e) {    e.preventDefault();    setErr("");    try {      setLoading(true);      // ðŸ‘‡ ahora pasamos usuario/email y contraseÃ±a por separado      await login(form.email, form.password);      navigate("/home", { replace: true });    } catch (e) {      // ðŸ‘‡ muestra la razÃ³n real (p.ej. "Credenciales invÃ¡lidas")      setErr(e?.message || "No se pudo iniciar sesiÃ³n. Intenta nuevamente.");    } finally {      setLoading(false);    }  }  return (    <section className="relative overflow-hidden">      {/* Fondo degradado (match landing/register) */}      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900" />      {/* Halos suaves (mismos que Register) */}      <div className="pointer-events-none absolute -left-28 top-24 h-72 w-72 rounded-full bg-indigo-600/20 blur-3xl" />      <div className="pointer-events-none absolute -right-20 bottom-10 h-80 w-80 rounded-full bg-sky-500/10 blur-2xl" />      <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-md grid-cols-1 items-center gap-6 px-4 py-16 text-white">        {/* Form centrado */}        <div className="w-full">          <div className="rounded-3xl border border-white/15 bg-white/10 p-8 shadow-2xl backdrop-blur">            <div className="mb-6 text-center">              <h1 className="text-3xl font-extrabold leading-tight">Iniciar sesiÃ³n</h1>              <p className="mt-1 text-sm text-indigo-100/90">Bienvenido(a) de vuelta ðŸ‘‹</p>            </div>            {err && (              <div className="mb-4 rounded-xl border border-rose-300/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-100">                {err}              </div>            )}            <form onSubmit={submit} className="grid gap-4">              <div>                <label className="mb-1 block text-sm text-indigo-100/90">Email o usuario</label>                <input                  name="email"                  type="text"                  value={form.email}                  onChange={onChange}                  placeholder="tucorreo@dominio.com o usuario"                  required                  className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-white placeholder:text-white/70 outline-none focus:ring-2 focus:ring-sky-300/40"                />              </div>              <div>                <label className="mb-1 block text-sm text-indigo-100/90">ContraseÃ±a</label>                <div className="relative">                  <input                    name="password"                    type={showPwd ? "text" : "password"}                    value={form.password}                    onChange={onChange}                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"                    required                    className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 pr-10 text-white placeholder:text-white/70 outline-none focus:ring-2 focus:ring-sky-300/40"                  />                  <button                    type="button"                    onClick={() => setShowPwd((v) => !v)}                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-white/20 bg-white/10 px-2 py-1 text-xs text-white/90 hover:bg-white/15"                    aria-label={showPwd ? "Ocultar contraseÃ±a" : "Mostrar contraseÃ±a"}                  >                    {showPwd ? "Ocultar" : "Mostrar"}                  </button>                </div>              </div>              <button                disabled={loading}                className="mt-2 w-full rounded-xl bg-white py-2.5 font-semibold text-slate-900 transition hover:opacity-95 disabled:opacity-60"              >                {loading ? "Ingresando..." : "Entrar"}              </button>            </form>            <p className="mt-5 text-center text-sm text-indigo-100/90">              Â¿No tienes cuenta?{" "}              <Link to="/register" className="font-semibold text-white hover:underline">                Crear cuenta              </Link>            </p>          </div>        </div>      </div>    </section>  );}
+./tmp_RequestDetail_clean.jsx:92:  // Reseñas del cliente hacia el proveedor ganador
+./tmp_RequestDetail_clean.jsx:117:    setOk("Oferta aceptada ✅");
+./tmp_RequestDetail_clean.jsx:118:    show("Oferta aceptada ✅", { type: "success" });
+./tmp_RequestDetail_clean.jsx:152:      show("Reseña enviada", { type: "success" });
+./tmp_RequestDetail_clean.jsx:155:      show(e?.message || "No se pudo enviar la reseña", { type: "error" });
+./tmp_RequestDetail_clean.jsx:247:            {/* Botón para abrir chat cuando hay oferta aceptada y soy participante */}
+./tmp_RequestDetail_clean.jsx:270:                <InfoBox label="Ubicación" value={req.location || "—"} />
+./tmp_RequestDetail_clean.jsx:271:                <InfoBox label="Presupuesto" value={req.budget ? CLP(req.budget) : "—"} />
+./tmp_RequestDetail_clean.jsx:275:              {/* Línea extra para mostrar origen si existe */}
+./tmp_RequestDetail_clean.jsx:291:                <h3 className="mb-2 text-lg font-extrabold text-white/95">Descripción</h3>
+./tmp_RequestDetail_clean.jsx:292:                <p className="whitespace-pre-wrap text-indigo-100/90">{req.description || "Sin descripción."}</p>
+./tmp_RequestDetail_clean.jsx:306:                  {ownerView ? "Aún no tienes ofertas. Cuando lleguen, podrás verlas aquí y aceptar la mejor." : "Sé el primero en ofertar. ¡Envía tu propuesta! ✨"}
+./tmp_RequestDetail_clean.jsx:344:                      placeholder="Describe tu experiencia, disponibilidad y qué incluye tu precio."
+./tmp_RequestDetail_clean.jsx:376:                      <div className="text-sm text-indigo-200/85">Ya enviaste una reseña para esta solicitud.</div>
+./tmp_RequestDetail_clean.jsx:402:                        <button onClick={submitReview} className="rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400">Enviar reseña</button>
+./tmp_RequestDetail_clean.jsx:412:                  <InfoRow label="Categoría" value={req.category || "—"} />
+./tmp_RequestDetail_clean.jsx:413:                  <InfoRow label="Ubicación" value={req.location || "—"} />
+./tmp_RequestDetail_clean.jsx:415:                  <InfoRow label="Presupuesto" value={req.budget ? CLP(req.budget) : "—"} />
+./tmp_RequestDetail_clean.jsx:460:            <span>Proveedor: <strong className="text-white/95">{offer.providerId || "—"}</strong></span>
+./tmp_RequestDetail_clean.jsx:464:            <span>· {new Date(offer.createdAt).toLocaleString()}</span>
+./tmp_RequestDetail_clean.jsx:466:          <div className="whitespace-pre-wrap text-sm text-white/95">{offer.message || "—"}</div>
+./tmp_ServiceDetail_dump.txt:47:        <div className="mx-auto max-w-4xl px-4 py-12 text-white">Cargando…</div>
+./tmp_ServiceDetail_dump.txt:68:            <div className="mt-1 text-sm text-indigo-200/80">Categoría: <strong>{svc.category || 'General'}</strong></div>
+./tmp_ServiceDetail_dump.txt:69:            <div className="text-sm text-indigo-200/80">Ubicación: <strong>{svc.location || '-'}</strong></div>
+./tmp_ServiceDetail_dump.txt:76:            <div className="text-sm text-indigo-200/80">Descripción</div>
+./tmp_ServiceDetail_dump.txt:77:            <div className="mt-1 whitespace-pre-wrap text-white/95">{svc.description || '—'}</div>
+./tmp_ServiceDetail_dump.txt:79:              <InfoBox label="Precio desde" value={svc.price_from ? CLP(svc.price_from) : (svc.priceFrom ? CLP(svc.priceFrom) : '—')} />
+./tmp_ServiceDetail_dump.txt:81:              <InfoBox label="Publicación" value={svc.created_at ? new Date(svc.created_at).toLocaleString() : '—'} />
+./tmp_ServiceDetail_dump.txt:85:            <div className="text-sm text-indigo-200/80">Reputación</div>
+./tmp_ServiceDetail_dump.txt:88:                <span className="font-bold">{rating.avg.toFixed(1)} ★</span>
+./tmp_ServiceDetail_dump.txt:89:                <span className="text-sm">· {rating.count} reseña{rating.count>1?'s':''}</span>
+./tmp_ServiceDetail_dump.txt:99:                    <div className="mt-1 text-sm font-semibold text-white/95">{rv.rating} ★</div>
+./tmp_ServiceDetail_dump.txt:103:                {reviews.length>6 && <div className="text-xs text-indigo-200/80">Mostrando 6 de {reviews.length} reseñas…</div>}
+./backend_django/api/admin.py:1:﻿from django.contrib import admin
+./backend_django/api/views.py:1:﻿from django.contrib.auth import authenticate
+./backend_django/api/views.py:30:except Exception:  # fallback mÃ­nimo con urllib
+./backend_django/api/views.py:66:    # Requiere verificación por email para activar
+./backend_django/api/views.py:73:    # Envía correo de verificación (no bloqueante si falla)
+./backend_django/api/views.py:106:        txt = f"Hola {user.username},\n\nConfirma tu cuenta haciendo clic en el siguiente enlace:\n{verify_url}\n\nSi no fuiste tú, ignora este mensaje."
+./backend_django/api/views.py:107:        html = f""" <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:#f8fafc;padding:24px;color:#0f172a"> <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,.06);overflow:hidden"> <tr> <td style="padding:24px 24px 8px 24px; text-align:center"> <div style="font-size:20px;font-weight:700;color:#0f172a">Fixly</div> </td> </tr> <tr> <td style="padding:8px 24px 0 24px;"> <p style="font-size:16px; margin:0 0 12px 0">Hola <strong>{user.username}</strong>,</p> <p style="font-size:14px; margin:0 0 16px 0; color:#334155">Confirma tu cuenta haciendo clic en el botón:</p> <p style="margin:16px 0"> <a href="{verify_url}" style="display:inline-block;padding:12px 18px;background:#0ea5e9;color:#fff;border-radius:10px;text-decoration:none;font-weight:600">Confirmar mi cuenta</a> </p> <p style="font-size:12px; color:#64748b">Si el botón no funciona, copia y pega este enlace en tu navegador:<br/> <a href="{verify_url}" style="color:#0ea5e9;text-decoration:none">{verify_url}</a> </p> <p style="font-size:12px; color:#94a3b8">Si no fuiste tú, ignora este mensaje.</p> </td> </tr> </table> </div> """
+./backend_django/api/views.py:117:        subject = 'Restablece tu contraseña en Fixly'
+./backend_django/api/views.py:118:        txt = f"Hola {user.username},\n\nRestablece tu contraseña haciendo clic en este enlace:\n{reset_url}\n\nSi no solicitaste esto, ignora el mensaje."
+./backend_django/api/views.py:129:        <p style="font-size:14px; margin:0 0 16px 0; color:#334155">Solicitaste restablecer tu contraseña. Haz clic en el botón:</p>
+./backend_django/api/views.py:131:          <a href="{reset_url}" style="display:inline-block;padding:12px 18px;background:#0ea5e9;color:#fff;border-radius:10px;text-decoration:none;font-weight:600">Restablecer contraseña</a>
+./backend_django/api/views.py:133:        <p style="font-size:12px; color:#64748b">Si el botón no funciona, copia este enlace:<br/>
+./backend_django/api/views.py:201:        return Response({'error': 'Token inválido'}, status=400)
+./backend_django/api/views.py:203:        return Response({'error': 'Token inválido o expirado'}, status=400)
+./backend_django/api/views.py:214:        return Response({'error': 'Parámetros faltantes'}, status=400)
+./backend_django/api/views.py:219:        return Response({'error': 'Token inválido'}, status=400)
+./backend_django/api/views.py:221:        return Response({'error': 'Token inválido o expirado'}, status=400)
+./backend_django/api/views.py:251:        return Response({'error': 'Autenticación requerida'}, status=401)
+./backend_django/api/views.py:254:    # Validación rápida de presupuesto no negativo
+./backend_django/api/views.py:261:        return Response({'error': 'Presupuesto inválido'}, status=400)
+./backend_django/api/views.py:307:        return Response({'error': 'Autenticación requerida'}, status=401)
+./backend_django/api/views.py:312:    # Validación de precio no negativo
+./backend_django/api/views.py:318:        return Response({'error': 'Precio inválido'}, status=400)
+./backend_django/api/views.py:370:        return Response({'error': 'Autenticación requerida'}, status=401)
+./backend_django/api/views.py:414:        return Response({'error': 'Autenticación requerida'}, status=401)
+./backend_django/api/views.py:438:    # ComparaciÃ³n robusta por IDs para evitar problemas de identidad
+./backend_django/api/views.py:443:    # Fallback adicional por username (por si el front no refrescÃ³ el id todavÃ­a)
+./backend_django/api/views.py:451:    # Normaliza saltos de lÃ­nea y elimina secuencias literales "\\n"
+./backend_django/api/views.py:473:        return Response({'error': 'Rating inválido'}, status=400)
+./backend_django/api/views.py:550:        'stream': False,  # devolver JSON Ãºnico (no NDJSON)
+./backend_django/api/views.py:599:    # Contexto FAQ bÃ¡sico (MVP)
+./backend_django/api/views.py:603:        "Eres un asistente de Fixly en espaÃ±ol. Responde conciso y Ãºtil basÃ¡ndote en el contexto. "
+./backend_django/api/views.py:604:        "Si algo no estÃ¡ en el contexto, dilo y sugiere pasos prÃ¡cticos.\n\n"
+./backend_django/api/views.py:608:    # Override con RAG + FAQ si hay Ã­ndice disponible
+./backend_django/api/views.py:632:            "Eres un asistente de Fixly en espaÃ±ol. Responde conciso y Ãºtil basÃ¡ndote en el contexto. "
+./backend_django/api/views.py:633:            "Si algo no estÃ¡ en el contexto, dilo y sugiere pasos prÃ¡cticos.\n\n"
+./backend_django/api/views.py:640:    # Sanear history (mÃ¡ximo 8 turnos)
+./backend_django/api/management/commands/export_report.py:23:        parser.add_argument("--days", type=int, default=30, help="Ventana de días para resumen temporal (default 30)")
+./backend_django/api/management/commands/export_report.py:47:        # Top 5 categorías por solicitudes
+./backend_django/api/management/commands/export_report.py:53:        # Serie temporal últimos N días
+./backend_django/api/management/commands/export_report.py:84:  <meta name=\"description\" content=\"Reporte automático de Fixly\" />
+./backend_django/api/management/commands/export_report.py:90:    <h1>Reporte automático — Fixly</h1>
+./backend_django/api/management/commands/export_report.py:96:      <div class=\"card\"><div>Tasa aceptación</div><div><strong>{acceptance_rate:.1f}%</strong></div></div>
+./backend_django/api/management/commands/export_report.py:107:    <h2>Top 5 categorías por solicitudes</h2>
+./backend_django/api/management/commands/export_report.py:108:    <table><thead><tr><th>Categoría</th><th>Cantidad</th></tr></thead><tbody>
+./backend_django/api/management/commands/export_report.py:112:    <h2>Solicitudes por día (últimos {days} días)</h2>
+./backend_django/api/management/commands/export_report.py:127:        # Intentar PDF con WeasyPrint si está instalado
+./backend_django/api/migrations/0002_constraints.py:13:        # Offer único por (request, provider)
+./backend_django/assistant/faq.json:3:    "q": "¿Cómo inicio sesión?",
+./backend_django/assistant/faq.json:4:    "a": "Desde el menú, ve a Iniciar sesión (ruta /login). Ingresa tu email o usuario y contraseña y presiona Entrar. Si las credenciales son correctas, quedarás autenticado y podrás crear solicitudes (cliente) o publicar servicios (proveedor)."
+./backend_django/assistant/faq.json:7:    "q": "¿Cómo publico una solicitud?",
+./backend_django/assistant/faq.json:8:    "a": "Ve a Solicitudes → Nueva solicitud. Completa título, categoría, ubicación, presupuesto y descripción, y publica."
+./backend_django/assistant/faq.json:11:    "q": "¿Cómo envío una oferta como proveedor?",
+./backend_django/assistant/faq.json:15:    "q": "¿Cómo acepto una oferta?",
+./backend_django/assistant/faq.json:16:    "a": "Como cliente, en el detalle de tu solicitud verás la lista de ofertas. Usa Aceptar en la oferta elegida."
+./backend_django/assistant/faq.json:19:    "q": "¿Cuándo puedo chatear?",
+./backend_django/assistant/faq.json:20:    "a": "El chat se habilita cuando hay una oferta aceptada. Solo participan el cliente dueño y el proveedor ganador."
+./backend_django/assistant/faq.json:27:    "q": "¿Cómo publico un servicio?",
+./backend_django/assistant/faq.json:28:    "a": "Ve a Servicios → Publicar servicio (/services/new). Completa título, categoría, precio (priceFrom), ubicación y descripción, y guarda. También puedes gestionarlos en /services/me."
+./backend_django/assistant/index.json:1:{"model": "nomic-embed-text", "count": 1, "items": [{"id": "README_assistant.md:0", "path": "README_assistant.md", "chunk": 0, "text": "# Documentación para el asistente (RAG)\n\nEste archivo es un ejemplo. Puedes añadir aquí guías breves sobre tu app:\n\n- Cómo publicar una solicitud y qué campos son obligatorios\n- Cómo enviar/aceptar ofertas y qué estados existen\n- Qué endpoints están disponibles y qué devuelven\n\nEl índice se genera con `python manage.py build_assistant_index` y el chat\nusará los fragmentos más relevantes como contexto.", "vector": []}]}
+./backend_django/assistant/docs/AUTH_login.md:1:# Inicio de sesión en Fixly
+./backend_django/assistant/docs/AUTH_login.md:5:- Escribe tu email o nombre de usuario y tu contraseña.
+./backend_django/assistant/docs/AUTH_login.md:6:- Presiona “Entrar”. Si las credenciales son válidas, quedarás autenticado y podrás acceder a Home, Solicitudes/Servicios y al perfil.
+./backend_django/assistant/docs/AUTH_login.md:8:## Detalles técnicos (backend)
+./backend_django/assistant/docs/AUTH_login.md:15:- “Credenciales inválidas”: revisa usuario/email y contraseña.
+./backend_django/assistant/docs/AUTH_login.md:16:- “Sin permisos en un chat”: solo el cliente dueño y el proveedor con oferta aceptada pueden chatear.
+./backend_django/assistant/docs/AUTH_login.md:17:- Si cambiaste de cuenta y no ves tus datos, cierra sesión y entra nuevamente para actualizar el perfil cacheado.
+./backend_django/assistant/docs/README_assistant.md:1:# Documentación para el asistente (RAG)
+./backend_django/assistant/docs/README_assistant.md:3:Este archivo es un ejemplo. Puedes añadir aquí guías breves sobre tu app:
+./backend_django/assistant/docs/README_assistant.md:5:- Cómo publicar una solicitud y qué campos son obligatorios
+./backend_django/assistant/docs/README_assistant.md:6:- Cómo enviar/aceptar ofertas y qué estados existen
+./backend_django/assistant/docs/README_assistant.md:7:- Qué endpoints están disponibles y qué devuelven
+./backend_django/assistant/docs/README_assistant.md:9:El índice se genera con `python manage.py build_assistant_index` y el chat
+./backend_django/assistant/docs/README_assistant.md:10:usará los fragmentos más relevantes como contexto.
+./backend_django/assistant/docs/REQUESTS.md:8:  - Auth requerida: sí (cliente autenticado)
+./backend_django/assistant/docs/REQUESTS.md:12:- Endpoint: `GET /api/requests` (lista todas; el front filtra por dueño `ownerId`).
+./backend_django/assistant/docs/REQUESTS.md:15:- `PUT /api/requests/{id}` — solo dueño.
+./backend_django/assistant/docs/REQUESTS.md:16:- Cambios típicos: `status` → `en_progreso` | `completado`.
+./backend_django/assistant/docs/SERVICES.md:3:## ¿Cómo publico un servicio?
+./backend_django/assistant/docs/SERVICES.md:4:- UI: ve a `Servicios → Publicar servicio` (ruta `/services/new`).
+./backend_django/assistant/docs/SERVICES.md:6:- Guarda para publicarlo; luego podrás verlo en `Servicios` y gestionarlo.
+./backend_django/assistant/management/commands/build_assistant_index.py:58:    help = 'Construye el índice local (embeddings) para el asistente RAG usando Ollama.'
+./backend_django/assistant/management/commands/build_assistant_index.py:95:        self.stdout.write(self.style.SUCCESS(f'Índice guardado en {out_path} ({total_chunks} chunks)'))
+./backend_django/backend/settings.py:92:# Confianza CSRF para el origen del front (por si se usa en algún POST futuro con cookies)
+./backend_django/backend/settings.py:111:# Frontend base URL (para enlaces de verificación)
+./backend_django/backend/settings.py:118:# Parámetros SMTP (si usas SMTP en .env, estos deben venir configurados)
+./backend_django/backend/settings.py:126:# Evitar conflicto TLS/SSL simultáneos
+./backend_django/reports/report_2025-11-07_0138.html:23:  <meta name="description" content="Reporte automático de Fixly" />
+./backend_django/reports/report_2025-11-07_0138.html:29:    <h1>Reporte automático — Fixly</h1>
+./backend_django/reports/report_2025-11-07_0138.html:35:      <div class="card"><div>Tasa aceptación</div><div><strong>100.0%</strong></div></div>
+./backend_django/reports/report_2025-11-07_0138.html:46:    <h2>Top 5 categorías por solicitudes</h2>
+./backend_django/reports/report_2025-11-07_0138.html:47:    <table><thead><tr><th>Categoría</th><th>Cantidad</th></tr></thead><tbody>
+./backend_django/reports/report_2025-11-07_0138.html:48:      <tr><td>Electricidad</td><td>6</td></tr><tr><td>Gasfitería</td><td>2</td></tr><tr><td>Otro</td><td>1</td></tr><tr><td>Pintura</td><td>1</td></tr><tr><td>Plomería</td><td>1</td></tr>
+./backend_django/reports/report_2025-11-07_0138.html:51:    <h2>Solicitudes por día (últimos 30 días)</h2>
+./src/api.js:1:// DEBUG (quÃƒÂ­talo luego)
+./src/api.js:111:// Obtiene rápidamente el ID del usuario autenticado desde el backend
+./src/api.js:131:/* -------- Auth endpoints (ahora con validación real) -------- */
+./src/api.js:142:    throw new Error("El email ya estÃƒÂ¡ registrado");
+./src/api.js:148:  // No autenticamos aquÃƒÂ­; el usuario va al Login
+./src/api.js:163:    throw new Error("Credenciales inválidas");
+./src/api.js:273:/* Alias útil usado en otros archivos */
+./src/api.js:303:    contact: String(contact || ""), // opcional: email/teléfono
+./src/api.js:368:    // Fallback a localStorage si el backend no está disponible
+./src/api.js:416:// --- Autenticación con backend ---
+./src/api.js:436:      // Disparar envío de verificación en background
+./src/api.js:444:  // Cachea perfil del backend si estÃƒÂ¡ disponible
+./src/api.js:485:// ===== Verificación de email =====
+./src/api.js:490:    return { ok: false, error: e?.message || 'No se pudo enviar verificación' };
+./src/App.jsx:1:﻿// src/App.jsx
+./src/App.jsx:71:        {/* PÃºblica */}
+./src/main.jsx:2:import React from "react";                         // 👈 importa React completo
+./src/main.jsx:3:import ReactDOM from "react-dom/client";          // 👈 importa ReactDOM
+./src/components/AssistantWidget.jsx:1:﻿import { useEffect, useRef, useState } from "react";
+./src/components/AssistantWidget.jsx:57:          <span aria-hidden="true" className="text-2xl leading-none">🔧</span>
+./src/components/AssistantWidget.jsx+.num:3:   5:   "¿Cómo publico una solicitud?",
+./src/components/AssistantWidget.jsx+.num:4:   6:   "¿Cómo envío una oferta?",
+./src/components/AssistantWidget.jsx+.num:5:   7:   "¿Cómo acepto una oferta?",
+./src/components/AssistantWidget.jsx+.num:6:   8:   "¿Cuándo puedo chatear?",
+./src/components/AssistantWidget.jsx+.num:58: 102:                 placeholder="Escribe tu pregunta…"
+./src/components/AvatarPicker.jsx:4:/** Redimensiona a un cuadrado máx 256px, devuelve dataURL */
+./src/components/AvatarPicker.jsx:40:  size = 72,         // tamaño visual en px (círculo)
+./src/components/AvatarPicker.jsx:84:          ✏️
+./src/components/ConfirmModal.jsx:3:  title = "¿Confirmar?",
+./src/components/ConfirmModal.jsx:4:  message = "Esta acción no se puede deshacer.",
+./src/components/Empty.jsx:5:        <span className="text-xl">✨</span>
+./src/components/Footer.jsx:6:        Hecho con <span className="text-rose-600">♥</span> por Fixly
+./src/components/Layout.jsx:1:﻿// src/components/Layout.jsx
+./src/components/Layout.jsx:8:// Proveedor de toasts se aplica a nivel raíz (main.jsx)
+./src/components/Layout.jsx:16:  // Páginas con fondo oscuro propio (prefijos incluidos)
+./src/components/Layout.jsx:25:  // (opcional) refresco de conteo de requests si cambian en otra pestaÃ±a
+./src/components/Layout.jsx:96:            {/* Navegación izquierda */}
+./src/components/Layout.jsx:99:              {/* Navegación izquierda (dentro del bloque ya existente) */}
+./src/components/Layout.jsx:135:            {/* Píldora de rol con avatar */}
+./src/components/Layout.jsx:140:            <div className="flex items-center gap-2"> {!logged && (<NavLink to="/register" className={navClass}>Registrarse</NavLink>)} {logged ? ( <button onClick={() => { onLogout?.(); navigate("/", { replace: true }); }} className="px-3 py-1.5 rounded-lg text-slate-700 hover:bg-slate-100" > Cerrar sesión </button> ) : ( <NavLink to="/login" className={navClass}>Iniciar sesión</NavLink> )} </div>
+./src/components/Layout.jsx:151:<footer className="relative mt-1 bg-white"> {!isLanding && ( <div className="absolute -top-1 left-0 w-full overflow-hidden leading-[0]" aria-hidden> <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="h-12 w-full"> <path d="M0,64 C240,128 480,0 720,16 C960,32 1200,112 1440,64 L1440,0 L0,0 Z" fill="#ffffff" /> </svg> </div> )} <div className="mx-auto max-w-6xl px-4 py-8 text-center text-sm text-slate-600"> Hecho con amor <span className="align-middle">❤️</span><br></br><a href="mailto:soporte@fixly.test" className="text-sky-700 hover:underline">soporte@fixly.test</a> · <a href="tel:+56987654321" className="text-sky-700 hover:underline">+56 9 8765 4321</a> </div> </footer>      </div>
+./src/components/Login.jsx:1:﻿// src/components/Login.jsx
+./src/components/Login.jsx:32:      setHint('Tu email no está verificado. Revisa tu bandeja o reenvía el correo de confirmación.');
+./src/components/Login.jsx:38:  // cooldown del botón Reenviar
+./src/components/Login.jsx:57:      setErr(e?.message || "No se pudo iniciar sesión. Intenta nuevamente.");
+./src/components/Login.jsx:76:              <h1 className="text-3xl font-extrabold leading-tight">Iniciar sesión</h1>
+./src/components/Login.jsx:100:                  >{sending ? 'Enviando…' : (cooldown>0 ? `Reenviar (${cooldown}s)` : 'Reenviar correo')}</button>
+./src/components/Login.jsx:120:                <label className="mb-1 block text-sm text-indigo-100/90">Contraseña</label>
+./src/components/Login.jsx:135:                    aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
+./src/components/Login.jsx:152:                ¿Olvidaste tu contraseña?
+./src/components/Login.jsx:157:              ¿No tienes cuenta?{" "}
+./src/components/Navbar.jsx:41:    profile?.role === "provider" ? "Proveedor" : "—";
+./src/components/Navbar.jsx:64:                Cerrar sesión
+./src/components/NotificationBell.jsx:58:            <button onClick={markAllRead} className="text-xs text-slate-500 hover:text-slate-700">Marcar leídas</button>
+./src/components/Notifier.jsx:52:        // refresca identidad por si se actualizó el profile.id
+./src/components/Notifier.jsx:69:            // Método 1: por conteo
+./src/components/Notifier.jsx:72:            // Método 2: por IDs (por si hubo upsert y el conteo no cambia)
+./src/components/Notifier.jsx:181:  }, []); // sólo al montar
+./src/components/RatingBadge.jsx:37:      title={`${avg.toFixed(2)} sobre 5 (${count} reseña${count > 1 ? "s" : ""})`}
+./src/components/RatingBadge.jsx:39:      {avg.toFixed(1)} ★ {count}
+./src/components/Register.jsx:1:﻿// src/components/Register.jsx (verificación por email)
+./src/components/Register.jsx:15:  // Cuenta regresiva del cooldown del botón "Reenviar"
+./src/components/Register.jsx:33:    if (!isValidEmail(form.email)) { setErr("Por favor, ingresa un email válido."); return; }
+./src/components/Register.jsx:57:              <p className="mt-1 text-sm text-indigo-100/90">Únete a Fixly y publica solicitudes o encuentra trabajos.</p>
+./src/components/Register.jsx:68:                  <span>Revisa tu bandeja o reenvía el correo si no te llegó.</span>
+./src/components/Register.jsx:74:                  >{sending ? 'Enviando…' : (cooldown>0 ? `Reenviar (${cooldown}s)` : 'Reenviar')}</button>
+./src/components/Register.jsx:76:                {/* Enlace a iniciar sesión removido por preferencia del usuario */}
+./src/components/Register.jsx:90:                <label className="mb-1 block text-sm text-indigo-100/90">Contraseña</label>
+./src/components/Register.jsx:93:                  <button type="button" onClick={()=>setShowPwd(v=>!v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-white/20 bg-white/10 px-2 py-1 text-xs text-white/90 hover:bg-white/15" aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+./src/components/Register.jsx:97:                <p className="mt-1 text-xs text-indigo-100/70">Usa 8+ caracteres. Recomendado: mayúsculas, minúsculas y números.</p>
+./src/components/Register.jsx:99:              <button disabled={loading} className="mt-2 w-full rounded-xl bg-white py-2.5 font-semibold text-slate-900 transition hover:opacity-95 disabled:opacity-60">{loading ? 'Creando…' : 'Registrarme'}</button>
+./src/components/Register.jsx:102:            <p className="mt-5 text-center text-sm text-indigo-100/90">¿Ya tienes cuenta?{' '}<Link to="/login" className="font-semibold text-white hover:underline">Iniciar sesión</Link></p>
+./src/components/Toast.jsx:59:        <span className="mt-[2px] text-base">🔔</span>
+./src/pages/Chat.jsx:66:            <p className="mt-2 text-indigo-200/90">Asegúrate de tener una oferta aceptada y estar autenticado.</p>
+./src/pages/ExploreServices.jsx:1:﻿// src/pages/ExploreServices.jsx
+./src/pages/ExploreServices.jsx:12:// Renderiza saltos de línea ("\n") como <br/>
+./src/pages/ExploreServices.jsx:68:          <p className="mt-1 text-sm text-indigo-200/85">Encuentra proveedores y revisa su reputación.</p>
+./src/pages/ExploreServices.jsx:94:              placeholder="Ubicación"
+./src/pages/ExploreServices.jsx:133:                  {/* Reputación del proveedor (global por usuario) */}
+./src/pages/ForgotPassword.jsx:1:﻿// src/pages/ForgotPassword.jsx
+./src/pages/ForgotPassword.jsx:23:      setMessage("Si tu email está registrado, te enviamos instrucciones para restablecer la contraseña.");
+./src/pages/ForgotPassword.jsx:40:            <h1 className="text-3xl font-extrabold leading-tight">Recuperar contraseña</h1>
+./src/pages/ForgotPassword.jsx:78:            ¿Recordaste tu contraseña?{" "}
+./src/pages/ForgotPassword.jsx:80:              Iniciar sesión
+./src/pages/Home.jsx:1:﻿// src/pages/Home.jsx
+./src/pages/Home.jsx:90:          <div className="text-[10px] text-indigo-200/80">Categoría</div>
+./src/pages/Home.jsx:94:          <div className="text-[10px] text-indigo-200/80">Ubicación</div>
+./src/pages/Home.jsx:95:          <div className="text-sm font-semibold text-white/90">{item.location || "—"}</div>
+./src/pages/Home.jsx:111:                ? (isClientView ? "Tienes ofertas para revisar" : "Aún en concurso")
+./src/pages/Home.jsx:112:                : "Sin ofertas aún")}
+./src/pages/Home.jsx:134:  // Métricas rápidas
+./src/pages/Home.jsx:159:  // Últimas 3 según rol
+./src/pages/Home.jsx:174:      {/* Fondo degradé + halos */}
+./src/pages/Home.jsx:185:                {role === "client" && <>Hola{displayName ? `, ${displayName}` : ""} 👋<br /> ¿Listo para solicitar un servicio?</>}
+./src/pages/Home.jsx:186:                {role === "provider" && <>¡Bienvenido{displayName ? `, ${displayName}` : ""}! 🔧<br /> Encuentra trabajos cerca de ti</>}
+./src/pages/Home.jsx:187:                {!role && <>Bienvenido a Fixly 👋<br /> Conecta clientes y proveedores al instante</>}
+./src/pages/Home.jsx:193:                    ? "Explora solicitudes disponibles y envía ofertas competitivas."
+./src/pages/Home.jsx:232:        {/* ---------- MÉTRICAS ---------- */}
+./src/pages/Home.jsx:276:                <div className="mt-1 text-2xl font-extrabold text-white/95">—</div>
+./src/pages/Home.jsx:286:        {/* ---------- ÚLTIMAS 3 ---------- */}
+./src/pages/Home.jsx:289:            {role === "provider" ? "Solicitudes recientes" : "Tus últimas solicitudes"}
+./src/pages/Home.jsx:304:              ? "Aún no tienes solicitudes. ¡Crea la primera para recibir ofertas ✨!"
+./src/pages/Home.jsx:326:                Ver más
+./src/pages/Landing.jsx:1:﻿// src/pages/Landing.jsx
+./src/pages/Landing.jsx:66:            Iniciar sesión
+./src/pages/Landing.jsx:72:          <span className="rounded-full border border-white/20 px-3 py-1">Rápido</span>
+./src/pages/Landing.jsx:82:          alt="Ilustración Fixly"
+./src/pages/Landing.jsx:88:    {/* Curva hacia la siguiente sección (blanca) */}
+./src/pages/Landing.jsx:92:  {/* =================== ¿CÓMO FUNCIONA? =================== */}
+./src/pages/Landing.jsx:96:        <h2 className="text-3xl font-extrabold text-slate-900">¿Cómo funciona?</h2>
+./src/pages/Landing.jsx:104:            alt="Ilustración Fixly"
+./src/pages/Landing.jsx:114:              d: "Describe lo que necesitas, tu ubicación y la urgencia.",
+./src/pages/Landing.jsx:124:              d: "Compara precios, mensajes y reputación de proveedores.",
+./src/pages/Landing.jsx:153:              {/* Card pequeña */}
+./src/pages/Landing.jsx:176:    {/* Curva hacia la siguiente sección azul */}
+./src/pages/Landing.jsx:196:            {/* ícono */}
+./src/pages/Landing.jsx:203:          <p className="mt-1 text-indigo-100/90">Compara ofertas, mensajes y reputación en un solo lugar.</p>
+./src/pages/Landing.jsx:219:              Comunicación centralizada
+./src/pages/Landing.jsx:274:          <p className="mt-1 text-indigo-100/90">Ajusta horarios, materiales y alcance según tus necesidades.</p>
+./src/pages/Landing.jsx:282:              Re-negocia fácilmente
+./src/pages/Landing.jsx:301:  {/* =================== CATEGORÍAS POPULARES =================== */}
+./src/pages/Landing.jsx:305:        <h2 className="text-3xl font-extrabold text-slate-900">Categorías populares</h2>
+./src/pages/Landing.jsx:312:            name: "Plomería",
+./src/pages/Landing.jsx:330:            name: "Gasfitería",
+./src/pages/Landing.jsx:339:            name: "Carpintería",
+./src/pages/Landing.jsx:357:            name: "Cerrajería",
+./src/pages/Landing.jsx:386:                {["Cerca de ti", "Verificados", "Rápidos"].map((tag) => (
+./src/pages/Landing.jsx:406:<section className="relative overflow-hidden"> <WaveTop className="h-16 w-full" fill="#ffffff" /> <div className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-800 via-indigo-700 to-blue-700" /> <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" /> <div className="pointer-events-none absolute -left-20 -bottom-24 h-64 w-64 rounded-full bg-blue-400/10 blur-2xl" /> <div className="mx-auto max-w-6xl px-4 py-16 text-white text-center"> <h3 className="text-2xl font-extrabold">¿Listo para empezar?</h3> <p className="mt-2 text-indigo-100/90">Crea tu cuenta y publica tu primera solicitud.</p>
+./src/pages/Landing.jsx:412:    Iniciar sesión
+./src/pages/Landing.jsx.bak:1:﻿import { isAuthed } from "../api";
+./src/pages/Landing.jsx.bak:60:                Iniciar sesiÃ³n
+./src/pages/Landing.jsx.bak:66:              <span className="rounded-full border border-white/20 px-3 py-1">RÃ¡pido</span>
+./src/pages/Landing.jsx.bak:76:  alt="IlustraciÃ³n Fixly"
+./src/pages/Landing.jsx.bak:87:        {/* Curva hacia la siguiente secciÃ³n (blanca) */}
+./src/pages/Landing.jsx.bak:91:      {/* =================== Â¿CÃ“MO FUNCIONA? (blanco, imagen izquierda + cards vertical) =================== */}
+./src/pages/Landing.jsx.bak:95:      <h2 className="text-3xl font-extrabold text-slate-900">Â¿CÃ³mo funciona?</h2>
+./src/pages/Landing.jsx.bak:103:  alt="IlustraciÃ³n Fixly"
+./src/pages/Landing.jsx.bak:108:      {/* Columna derecha: Timeline de pasos (cards pequeÃ±as) */}
+./src/pages/Landing.jsx.bak:113:            d: "Describe lo que necesitas, tu ubicaciÃ³n y la urgencia.",
+./src/pages/Landing.jsx.bak:123:            d: "Compara precios, mensajes y reputaciÃ³n de proveedores.",
+./src/pages/Landing.jsx.bak:146:            {/* Card pequeÃ±a */}
+./src/pages/Landing.jsx.bak:169:  {/* Curva hacia la siguiente secciÃ³n azul */}
+./src/pages/Landing.jsx.bak:192:          {/* Ã­cono */}
+./src/pages/Landing.jsx.bak:200:          Compara ofertas, mensajes y reputaciÃ³n en un solo lugar.
+./src/pages/Landing.jsx.bak:217:            ComunicaciÃ³n centralizada
+./src/pages/Landing.jsx.bak:264:          Ajusta horarios, materiales y alcance segÃºn tus necesidades.
+./src/pages/Landing.jsx.bak:273:            Re-negocia fÃ¡cilmente
+./src/pages/Landing.jsx.bak:293:      {/* =================== CATEGORÃAS POPULARES (blanco, cards bonitas) =================== */}
+./src/pages/Landing.jsx.bak:297:      <h2 className="text-3xl font-extrabold text-slate-900">CategorÃ­as populares</h2>
+./src/pages/Landing.jsx.bak:303:        { name: "PlomerÃ­a",      color: "from-sky-50 to-white",        icon:
+./src/pages/Landing.jsx.bak:313:        { name: "GasfiterÃ­a",    color: "from-cyan-50 to-white",       icon:
+./src/pages/Landing.jsx.bak:318:        { name: "CarpinterÃ­a",   color: "from-rose-50 to-white",       icon:
+./src/pages/Landing.jsx.bak:328:        { name: "CerrajerÃ­a",    color: "from-violet-50 to-white",     icon:
+./src/pages/Landing.jsx.bak:354:              {["Cerca de ti", "Verificados", "RÃ¡pidos"].map(tag => (
+./src/pages/Onboarding.jsx:1:﻿// src/pages/Onboarding.jsx
+./src/pages/Onboarding.jsx:12:  const steps = ["Perfil", "Rol", "Intereses", "Confirmación"];
+./src/pages/Onboarding.jsx:20:    // photoURL no es obligatorio guardarlo aquÃ­, AvatarPicker lo persiste directo,
+./src/pages/Onboarding.jsx:21:    // pero lo mantenemos en memoria para la Confirmación final si ya existe.
+./src/pages/Onboarding.jsx:42:      setErr("Selecciona al menos una categorÃ­a si eres proveedor.");
+./src/pages/Onboarding.jsx:84:      {/* Fondo degradÃ© + halos */}
+./src/pages/Onboarding.jsx:145:          {/* NavegaciÃ³n */}
+./src/pages/Onboarding.jsx:152:              AtrÃ¡s
+./src/pages/Onboarding.jsx:198:            placeholder="Cómo quieres que te vean"
+./src/pages/Onboarding.jsx:207:      <Tip>Sube una foto real (rostro). Se recorta automáticamente al centro.</Tip>
+./src/pages/Onboarding.jsx:224:        desc="Explora solicitudes y envÃ­a propuestas competitivas."
+./src/pages/Onboarding.jsx:260:    "PlomerÃ­a",
+./src/pages/Onboarding.jsx:262:    "GasfiterÃ­a",
+./src/pages/Onboarding.jsx:264:    "CarpinterÃ­a",
+./src/pages/Onboarding.jsx:265:    "CerrajerÃ­a",
+./src/pages/Onboarding.jsx:298:      <Tip>Puedes cambiar tus categorí­as luego en "Ajustar perfil".</Tip>
+./src/pages/Onboarding.jsx:309:      <p className="text-indigo-200/90">Revisa tu información antes de finalizar.</p>
+./src/pages/Onboarding.jsx:320:        <div className="text-sm text-indigo-200/85">Así se verá tu avatar</div>
+./src/pages/Onboarding.jsx:324:        <Row label="Nombre a mostrar" value={form.displayName || "...”"} />
+./src/pages/Onboarding.jsx:332:              : "â€”"
+./src/pages/Onboarding.jsx:336:          label="CategorÃ­as"
+./src/pages/Onboarding.jsx:340:              : "â€”"
+./src/pages/Onboarding.jsx:345:      <Tip>Podrás editar estos datos más adelante.</Tip>
+./src/pages/Profile.jsx:1:﻿// src/pages/Profile.jsx
+./src/pages/Profile.jsx:12:  "Plomería", "Electricidad", "Gasfitería", "Pintura",
+./src/pages/Profile.jsx:13:  "Carpintería", "Cerrajería", "Aseo", "Mudanzas", "Otro",
+./src/pages/Profile.jsx:177:              <label className="mb-1 block text-sm text-indigo-200/85">Ubicación</label>
+./src/pages/Profile.jsx:194:                placeholder="Cuéntanos brevemente sobre ti…"
+./src/pages/Profile.jsx:200:          {/* categorías (checkboxes para evitar menú nativo) */}
+./src/pages/Profile.jsx:229:              {saving ? "Guardando…" : "Guardar cambios"}
+./src/pages/RequestDetail.jsx:28:// Mapea estados de oferta a español
+./src/pages/RequestDetail.jsx:58:  // Estado para reseñas (debe ejecutarse en todos los renders)
+./src/pages/RequestDetail.jsx:64:  // Verificar si ya existe reseña cuando hay ganador y soy dueño (cliente)
+./src/pages/RequestDetail.jsx:143:  // ReseÃ±as del cliente hacia el proveedor ganador
+./src/pages/RequestDetail.jsx:148:  // moved: useEffect para verificar reseña se declar antes del return condicional
+./src/pages/RequestDetail.jsx:158:    setOk("Oferta aceptada âœ…");
+./src/pages/RequestDetail.jsx:159:    show("Oferta aceptada âœ…", { type: "success" });
+./src/pages/RequestDetail.jsx:203:      show("Reseña enviada", { type: "success" });
+./src/pages/RequestDetail.jsx:206:      show(e?.message || "No se pudo enviar la reseña", { type: "error" });
+./src/pages/RequestDetail.jsx:298:            {/* BotÃ³n para abrir chat cuando hay oferta aceptada y soy participante */}
+./src/pages/RequestDetail.jsx:321:                <InfoBox label="Ubicación" value={req.location || "-"} />
+./src/pages/RequestDetail.jsx:326:              {/* LÃ­nea extra para mostrar origen si existe */}
+./src/pages/RequestDetail.jsx:342:                <h3 className="mb-2 text-lg font-extrabold text-white/95">Descripción</h3>
+./src/pages/RequestDetail.jsx:343:                <p className="whitespace-pre-wrap text-indigo-100/90">{req.description || "Sin descripción."}</p>
+./src/pages/RequestDetail.jsx:357:                  {ownerView ? "Aún no tienes ofertas. Cuando lleguen, podrás verlas aquí­ y aceptar la mejor." : "Sé el primero en ofertar. ¡Enví­a tu propuesta!"}
+./src/pages/RequestDetail.jsx:395:                      placeholder="Describe tu experiencia, disponibilidad y qué incluye tu precio."
+./src/pages/RequestDetail.jsx:427:                      <div className="text-sm text-indigo-200/85">Ya enviaste una reseña para esta solicitud.</div>
+./src/pages/RequestDetail.jsx:453:                        <button onClick={submitReview} className="rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400">Enviar reseÃ±a</button>
+./src/pages/RequestDetail.jsx:464:                  <InfoRow label="CategorÃ­a" value={req.category || "-"} />
+./src/pages/RequestDetail.jsx:465:                  <InfoRow label="UbicaciÃ³n" value={req.location || "-"} />
+./src/pages/RequestDetail.jsx:491:    <div className="text-sm text-indigo-200/85">Ya enviaste una reseña para esta solicitud.</div>
+./src/pages/RequestDetail.jsx:507:        Enviar reseña
+./src/pages/RequestDetail.jsx:667:// Modal de confirmación (se monta al final para evitar stacking issues)
+./src/pages/RequestDetail.jsx:674:      message="Esta acción no se puede deshacer. ¿Deseas continuar?"
+./src/pages/RequestEdit.jsx:69:      setErr("Completa título, categoría y descripción.");
+./src/pages/RequestEdit.jsx:90:      show("Cambios guardados ✅", { type: "success" });
+./src/pages/RequestEdit.jsx:94:      setErr("Ocurrió un error al guardar.");
+./src/pages/RequestEdit.jsx:121:      {/* Fondo degradé + halos */}
+./src/pages/RequestEdit.jsx:153:              <Field label="Título">
+./src/pages/RequestEdit.jsx:158:                  placeholder="Ej: Reparación de enchufe y revisión de circuito"
+./src/pages/RequestEdit.jsx:165:                <Field label="Categoría">
+./src/pages/RequestEdit.jsx:173:                    <option value="">Selecciona una categoría</option>
+./src/pages/RequestEdit.jsx:174:                    <option value="Plomería">Plomería</option>
+./src/pages/RequestEdit.jsx:176:                    <option value="Gasfitería">Gasfitería</option>
+./src/pages/RequestEdit.jsx:178:                    <option value="Carpintería">Carpintería</option>
+./src/pages/RequestEdit.jsx:197:              <Field label="Descripción" hint="Actualiza los detalles que ayuden a los proveedores a cotizar mejor.">
+./src/pages/RequestEdit.jsx:222:                <Field label="Ubicación">
+./src/pages/RequestEdit.jsx:251:          {/* Panel lateral: estado rápido */}
+./src/pages/RequestEdit.jsx:279:                <strong className="text-white/95">TIP:</strong> si el trabajo ya está en marcha,
+./src/pages/RequestEdit.jsx:280:                marca “En progreso”; cuando termine, marca “Completado”.
+./src/pages/RequestNew.jsx:7:  "Plomería", "Electricidad", "Gasfitería", "Pintura",
+./src/pages/RequestNew.jsx:8:  "Carpintería", "Cerrajería", "Aseo", "Mudanzas", "Otro",
+./src/pages/RequestNew.jsx:64:  // Cargar título del servicio (si viene desde "Contactar")
+./src/pages/RequestNew.jsx:110:      setErr("Completa el título y la categoría.");
+./src/pages/RequestNew.jsx:145:            Estás contactando al proveedor: <strong className="text-white/95">{provName || 'Proveedor'}</strong>
+./src/pages/RequestNew.jsx:148:            Al publicar, tu solicitud será visible y el proveedor podrá ofertar.
+./src/pages/RequestNew.jsx:159:              <label className="mb-1 block text-sm text-indigo-200/85">Título</label>
+./src/pages/RequestNew.jsx:164:                placeholder="Ej: Instalar lámparas en living"
+./src/pages/RequestNew.jsx:169:              <label className="mb-1 block text-sm text-indigo-200/85">Categoría</label>
+./src/pages/RequestNew.jsx:176:                <option value="">Selecciona una categoría</option>
+./src/pages/RequestNew.jsx:183:              <label className="mb-1 block text-sm text-indigo-200/85">Ubicación</label>
+./src/pages/RequestNew.jsx:217:              <label className="mb-1 block text-sm text-indigo-200/85">Descripción</label>
+./src/pages/RequestNew.jsx:235:              {loading ? "Creando…" : "Publicar solicitud"}
+./src/pages/Requests.jsx:87:          <div className="text-[10px] text-indigo-200/80">Categoría</div>
+./src/pages/Requests.jsx:91:          <div className="text-[10px] text-indigo-200/80">Ubicación</div>
+./src/pages/Requests.jsx:108:            ? (isClientView ? "Tienes ofertas para revisar" : "Aún en concurso")
+./src/pages/Requests.jsx:109:            : "Sin ofertas aún"}
+./src/pages/Requests.jsx:209:              placeholder="Buscar (título o descripción)"
+./src/pages/Requests.jsx:221:              <label className="mb-1 block text-xs text-indigo-200/80">Categoría</label>
+./src/pages/Requests.jsx:222:              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 text白 outline-none focus:ring-2 focus:ring-sky-300/40">
+./src/pages/Requests.jsx:239:              placeholder="Ubicación"
+./src/pages/Requests.jsx:255:                <option value="newest">Más recientes</option>
+./src/pages/Requests.jsx:256:                <option value="oldest">Más antiguas</option>
+./src/pages/Requests.jsx:257:                <option value="mostOffers">Más ofertas</option>
+./src/pages/Requests.jsx:273:            title={role === "client" ? "Sin resultados" : role === "provider" ? "Nada por aquí" : "No hay solicitudes"}
+./src/pages/Requests.jsx:278:                ? "Cambia filtros o vuelve más tarde."
+./src/pages/Requests.jsx:279:                : "Cuando existan solicitudes, aparecerán aquí."
+./src/pages/ResetPassword.jsx:1:﻿// src/pages/ResetPassword.jsx
+./src/pages/ResetPassword.jsx:24:      setError("El enlace no es válido.");
+./src/pages/ResetPassword.jsx:28:      setError("La contraseña debe tener al menos 6 caracteres.");
+./src/pages/ResetPassword.jsx:32:      setError("Las contraseñas no coinciden.");
+./src/pages/ResetPassword.jsx:38:      setMessage("Contraseña actualizada. Ahora puedes iniciar sesión.");
+./src/pages/ResetPassword.jsx:41:      setError(err?.message || "No pudimos actualizar la contraseña.");
+./src/pages/ResetPassword.jsx:56:            <h1 className="text-3xl font-extrabold leading-tight">Restablecer contraseña</h1>
+./src/pages/ResetPassword.jsx:57:            <p className="mt-1 text-sm text-white/80">Ingresa una nueva contraseña para tu cuenta.</p>
+./src/pages/ResetPassword.jsx:62:              Enlace inválido o incompleto. Revisa el correo que recibiste.
+./src/pages/ResetPassword.jsx:79:              <label className="mb-1 block text-sm text-white/85">Nueva contraseña</label>
+./src/pages/ResetPassword.jsx:90:              <label className="mb-1 block text-sm text-white/85">Confirmar contraseña</label>
+./src/pages/ResetPassword.jsx:105:              {loading ? "Actualizando..." : "Guardar contraseña"}
+./src/pages/ResetPassword.jsx:110:            ¿Ya la cambiaste?{" "}
+./src/pages/ResetPassword.jsx:112:              Iniciar sesión
+./src/pages/ServiceDetail.jsx:1:﻿// src/pages/ServiceDetail.jsx
+./src/pages/ServiceDetail.jsx:54:        <div className="mx-auto max-w-4xl px-4 py-12 text-white">Cargando¦</div>
+./src/pages/ServiceDetail.jsx:75:            <div className="mt-1 text-sm text-indigo-200/80">Categoría: <strong>{svc.category || 'General'}</strong></div>
+./src/pages/ServiceDetail.jsx:76:            <div className="text-sm text-indigo-200/80">Ubicación: <strong>{svc.location || '-'}</strong></div>
+./src/pages/ServiceDetail.jsx:109:            <div className="text-sm text-indigo-200/80">Descripción</div>
+./src/pages/ServiceDetail.jsx:114:              <InfoBox label="Publicación" value={svc.created_at ? new Date(svc.created_at).toLocaleString() : '-'} />
+./src/pages/ServiceDetail.jsx:118:            <div className="text-sm text-indigo-200/80">Reputación</div>
+./src/pages/ServiceDetail.jsx:121:                <span className="font-bold">{rating.avg.toFixed(1)} ★</span>
+./src/pages/ServiceDetail.jsx:122:                <span className="text-sm">· {rating.count} reseña{rating.count>1?'s':''}</span>
+./src/pages/ServiceDetail.jsx:132:                    <div className="mt-1 text-sm font-semibold text-white/95">{rv.rating} ★</div>
+./src/pages/ServiceDetail.jsx:136:                {reviews.length>6 && <div className="text-xs text-indigo-200/80">Mostrando 6 de {reviews.length} reseñas¦</div>}
+./src/pages/ServiceDetail.jsx:148:                  <label className="mb-1 block text-sm text-slate-700">Tí­tulo</label>
+./src/pages/ServiceDetail.jsx:153:                    <label className="mb-1 block text-sm text-slate-700">Categoría</label>
+./src/pages/ServiceDetail.jsx:157:                    <label className="mb-1 block text-sm text-slate-700">Ubicación</label>
+./src/pages/ServiceDetail.jsx:175:                  <label className="mb-1 block text-sm text-slate-700">Descripción</label>
+./src/pages/ServiceDetail.jsx:186:        {/* Confirmación eliminar */}
+./src/pages/ServiceDetail.jsx:190:          message="Esta acción no se puede deshacer. ¿Deseas continuar?"
+./src/pages/ServiceNew.jsx:1:﻿// src/pages/ServiceNew.jsx
+./src/pages/ServiceNew.jsx:37:      setErr("Completa título y categoría.");
+./src/pages/ServiceNew.jsx:74:            <Field label="Título" hint="Ej: Instalación de enchufes y canalización">
+./src/pages/ServiceNew.jsx:85:              <Field label="Categoría">
+./src/pages/ServiceNew.jsx:92:                  <option value="">Selecciona una categoría</option>
+./src/pages/ServiceNew.jsx:93:                  <option value="Plomería">Plomería</option>
+./src/pages/ServiceNew.jsx:95:                  <option value="Gasfitería">Gasfitería</option>
+./src/pages/ServiceNew.jsx:97:                  <option value="Carpintería">Carpintería</option>
+./src/pages/ServiceNew.jsx:98:                  <option value="Cerrajería">Cerrajería</option>
+./src/pages/ServiceNew.jsx:119:            <Field label="Ubicación">
+./src/pages/ServiceNew.jsx:129:            <Field label="Descripción" hint="Detalla qué incluye, tiempos, garantías, etc.">
+./src/pages/ServiceNew.jsx:135:                placeholder="Describe tu servicio…"
+./src/pages/Services.jsx:1:﻿// src/pages/Services.jsx
+./src/pages/Services.jsx:33:            <p className="mt-1 text-sm text-indigo-200/85">Activos: <strong>{active}</strong> Â· Total: <strong>{list.length}</strong></p>
+./src/pages/Services.jsx:48:            AÃºn no has publicado servicios. Â¡Comienza con tu primer aviso! âœ¨
+./src/pages/Services.jsx:69:                {/* Reputación del proveedor: siempre la misma para todos los servicios del mismo usuario */}
+./src/pages/Services.jsx:76:                {/* Acción única: Ver detalle */}
+./src/pages/Verify.jsx:17:        if (!uid || !token) throw new Error('Enlace inválido');
+./src/pages/Verify.jsx:32:          setMsg('Cuenta verificada. Puedes iniciar sesión.');
+./src/pages/Verify.jsx:36:        setMsg(e?.message || 'El enlace no es válido o expiró');
+./src/pages/Verify.jsx:47:            <div className="mb-4 text-center text-xl font-semibold">Verificación de email</div>
+./src/pages/Verify.jsx:53:                Ir al <Link to="/login" className="font-semibold text-white hover:underline">inicio de sesión</Link>
