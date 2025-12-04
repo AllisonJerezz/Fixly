@@ -13,6 +13,8 @@ from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 import re
+import logging
+logger = logging.getLogger(__name__)
 
 from .models import User, Profile, Request, Offer, Service, Lead, ChatMessage, Review
 from .serializers import (
@@ -73,31 +75,43 @@ def register(request):
     username = (request.data.get('username') or '').strip().lower()
     email = (request.data.get('email') or '').strip().lower()
     password = request.data.get('password') or ''
+
     if not username or not email or not password:
         return Response({'error': 'Todos los campos son obligatorios.'}, status=400)
+
     if len(username) < 3:
         return Response({'error': 'El usuario debe tener al menos 3 caracteres.'}, status=400)
+
     try:
         validate_email(email)
     except ValidationError:
         return Response({'error': 'Email inválido.'}, status=400)
+
     if not _is_strong_password(password):
-        return Response({'error': 'La contraseña debe tener al menos 6 caracteres e incluir mayúsculas, minúsculas y números.'}, status=400)
+        return Response({
+            'error': 'La contraseña debe tener al menos 6 caracteres e incluir mayúsculas, minúsculas y números.'
+        }, status=400)
+
     if User.objects.filter(Q(username=username) | Q(email=email)).exists():
         return Response({'error': 'Usuario o email ya registrados'}, status=409)
+
     user = User.objects.create_user(username=username, email=email, password=password)
+
     # Requiere verificación por email para activar
     try:
         user.is_active = False
         user.save(update_fields=["is_active"])
     except Exception:
-        pass
+        logger.exception("Error marcando usuario %s como inactivo tras registro", user.id)
+
     Profile.objects.get_or_create(user=user)
-    # Envía correo de verificación (no bloqueante si falla)
+
+    # Envía correo de verificación (ahora LOGUEA si falla)
     try:
         _send_verification_email(user)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.exception("Error enviando correo de verificación a %s: %s", user.email, e)
+
     # No devolvemos token hasta que verifique email
     return Response({'ok': True, 'user': UserSerializer(user).data}, status=201)
 
@@ -107,41 +121,40 @@ def register(request):
 def login_view(request):
     user_or_email = (request.data.get('userOrEmail') or '').strip().lower()
     password = request.data.get('password') or ''
+
     if not user_or_email or not password:
         return Response({'error': 'Ingresa usuario/email y contraseña.'}, status=400)
+
     user = User.objects.filter(Q(username=user_or_email) | Q(email=user_or_email)).first()
     if not user or not user.check_password(password):
         return Response({'error': 'Credenciales invalidas'}, status=401)
+
     if not user.is_active:
+        # Reenvía verificación si el usuario intenta loguear sin activar
         try:
             _send_verification_email(user)
         except Exception:
-            pass
+            logger.exception("Error reenviando verificación a %s durante login", user.email)
         return Response({'error': 'Email no verificado', 'code': 'email_not_verified'}, status=403)
+
     token = _jwt_for_user(user)
     return Response({'token': token, 'user': UserSerializer(user).data})
 
+
 def _send_verification_email(user):
-    try:
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-        base = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173').rstrip('/')
-        verify_url = f"{base}/verify?uid={uid}&token={urllib.parse.quote(token)}"
-        subject = 'Confirma tu cuenta en Fixly'
-        txt = f"Hola {user.username},\n\nConfirma tu cuenta haciendo clic en el siguiente enlace:\n{verify_url}\n\nSi no fuiste tú, ignora este mensaje."
-        html = f""" <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:#f8fafc;padding:24px;color:#0f172a"> <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,.06);overflow:hidden"> <tr> <td style="padding:24px 24px 8px 24px; text-align:center"> <div style="font-size:20px;font-weight:700;color:#0f172a">Fixly</div> </td> </tr> <tr> <td style="padding:8px 24px 0 24px;"> <p style="font-size:16px; margin:0 0 12px 0">Hola <strong>{user.username}</strong>,</p> <p style="font-size:14px; margin:0 0 16px 0; color:#334155">Confirma tu cuenta haciendo clic en el botón:</p> <p style="margin:16px 0"> <a href="{verify_url}" style="display:inline-block;padding:12px 18px;background:#0ea5e9;color:#fff;border-radius:10px;text-decoration:none;font-weight:600">Confirmar mi cuenta</a> </p> <p style="font-size:12px; color:#64748b">Si el botón no funciona, copia y pega este enlace en tu navegador:<br/> <a href="{verify_url}" style="color:#0ea5e9;text-decoration:none">{verify_url}</a> </p> <p style="font-size:12px; color:#94a3b8">Si no fuiste tú, ignora este mensaje.</p> </td> </tr> </table> </div> """
-        send_mail(subject, txt, getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'), [user.email], html_message=html)
-    except Exception:
-        pass
-def _send_password_reset_email(user):
-    try:
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-        base = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173').rstrip('/')
-        reset_url = f"{base}/reset-password?uid={uid}&token={urllib.parse.quote(token)}"
-        subject = 'Restablece tu contraseña en Fixly'
-        txt = f"Hola {user.username},\n\nRestablece tu contraseña haciendo clic en este enlace:\n{reset_url}\n\nSi no solicitaste esto, ignora el mensaje."
-        html = f"""<div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:#f8fafc;padding:24px;color:#0f172a">
+    """Envía el correo de verificación. Lanza excepción si algo falla."""
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    base = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+    verify_url = f"{base}/verify?uid={uid}&token={urllib.parse.quote(token)}"
+
+    subject = 'Confirma tu cuenta en Fixly'
+    txt = (
+        f"Hola {user.username},\n\n"
+        f"Confirma tu cuenta haciendo clic en el siguiente enlace:\n{verify_url}\n\n"
+        f"Si no fuiste tú, ignora este mensaje."
+    )
+    html = f""" <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:#f8fafc;padding:24px;color:#0f172a">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,.06);overflow:hidden">
     <tr>
       <td style="padding:24px 24px 8px 24px; text-align:center">
@@ -151,21 +164,82 @@ def _send_password_reset_email(user):
     <tr>
       <td style="padding:8px 24px 0 24px;">
         <p style="font-size:16px; margin:0 0 12px 0">Hola <strong>{user.username}</strong>,</p>
-        <p style="font-size:14px; margin:0 0 16px 0; color:#334155">Solicitaste restablecer tu contraseña. Haz clic en el botón:</p>
+        <p style="font-size:14px; margin:0 0 16px 0; color:#334155">Confirma tu cuenta haciendo clic en el botón:</p>
         <p style="margin:16px 0">
-          <a href="{reset_url}" style="display:inline-block;padding:12px 18px;background:#0ea5e9;color:#fff;border-radius:10px;text-decoration:none;font-weight:600">Restablecer contraseña</a>
+          <a href="{verify_url}" style="display:inline-block;padding:12px 18px;background:#0ea5e9;color:#fff;border-radius:10px;text-decoration:none;font-weight:600">Confirmar mi cuenta</a>
         </p>
-        <p style="font-size:12px; color:#64748b">Si el botón no funciona, copia este enlace:<br/>
-          <a href="{reset_url}" style="color:#0ea5e9;text-decoration:none">{reset_url}</a>
+        <p style="font-size:12px; color:#64748b">
+          Si el botón no funciona, copia y pega este enlace en tu navegador:<br/>
+          <a href="{verify_url}" style="color:#0ea5e9;text-decoration:none">{verify_url}</a>
         </p>
-        <p style="font-size:12px; color:#94a3b8">Si no solicitaste un cambio, ignora este mensaje.</p>
+        <p style="font-size:12px; color:#94a3b8">Si no fuiste tú, ignora este mensaje.</p>
       </td>
     </tr>
   </table>
 </div>"""
-        send_mail(subject, txt, getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'), [user.email], html_message=html)
-    except Exception:
-        pass
+
+    logger.error("Enviando verificación a %s vía %s", user.email, settings.EMAIL_HOST)
+    send_mail(
+        subject,
+        txt,
+        getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
+        [user.email],
+        html_message=html,
+    )
+    logger.error("Verificación enviada a %s (send_mail no lanzó error)", user.email)
+
+
+def _send_password_reset_email(user):
+    """Envía el correo de reseteo de contraseña. Lanza excepción si algo falla."""
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    base = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+    reset_url = f"{base}/reset-password?uid={uid}&token={urllib.parse.quote(token)}"
+
+    subject = 'Restablece tu contraseña en Fixly'
+    txt = (
+        f"Hola {user.username},\n\n"
+        f"Restablece tu contraseña haciendo clic en este enlace:\n{reset_url}\n\n"
+        f"Si no solicitaste esto, ignora el mensaje."
+    )
+    html = f"""<div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:#f8fafc;padding:24px;color:#0f172a">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,.06);overflow:hidden">
+    <tr>
+      <td style="padding:24px 24px 8px 24px; text-align:center">
+        <div style="font-size:20px;font-weight:700;color:#0f172a">Fixly</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px 24px 0 24px;">
+        <p style="font-size:16px; margin:0 0 12px 0">Hola <strong>{user.username}</strong>,</p>
+        <p style="font-size:14px; margin:0 0 16px 0; color:#334155">
+          Solicitaste restablecer tu contraseña. Haz clic en el botón:
+        </p>
+        <p style="margin:16px 0">
+          <a href="{reset_url}" style="display:inline-block;padding:12px 18px;background:#0ea5e9;color:#fff;border-radius:10px;text-decoration:none;font-weight:600">Restablecer contraseña</a>
+        </p>
+        <p style="font-size:12px; color:#64748b">
+          Si el botón no funciona, copia este enlace:<br/>
+          <a href="{reset_url}" style="color:#0ea5e9;text-decoration:none">{reset_url}</a>
+        </p>
+        <p style="font-size:12px; color:#94a3b8">
+          Si no solicitaste un cambio, ignora este mensaje.
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>"""
+
+    logger.error("Enviando reset a %s vía %s", user.email, settings.EMAIL_HOST)
+    send_mail(
+        subject,
+        txt,
+        getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
+        [user.email],
+        html_message=html,
+    )
+    logger.error("Reset enviado a %s (send_mail no lanzó error)", user.email)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -179,20 +253,26 @@ def send_verification_email(request):
         u = User.objects.filter(Q(username=idv) | Q(email=idv)).first()
         if not u:
             return Response({'error': 'No existe usuario'}, status=404)
+
     # Rate limit simple: 1 solicitud cada 60s por usuario/email
     key = (u.email or str(u.id) or '').lower()
     store = getattr(send_verification_email, '_last', {})
     now = time.time()
     last = store.get(key, 0)
     if now - last < 60:
-        return Response({'error': 'Espera antes de reenviar', 'retry_in': int(60 - (now - last))}, status=429)
+        return Response(
+            {'error': 'Espera antes de reenviar', 'retry_in': int(60 - (now - last))},
+            status=429,
+        )
+
     try:
         _send_verification_email(u)
         store[key] = now
         setattr(send_verification_email, '_last', store)
-    except Exception:
-        pass
-    return Response({'ok': True})
+        return Response({'ok': True})
+    except Exception as e:
+        logger.exception("Error enviando correo de verificación a %s: %s", u.email, e)
+        return Response({'error': 'Error enviando correo de verificación'}, status=500)
 
 
 @api_view(['POST'])
@@ -201,12 +281,15 @@ def password_reset_request(request):
     email = (request.data.get('email') or '').strip().lower()
     if not email:
         return Response({'ok': True})
+
     user = User.objects.filter(email=email).first()
     if user:
         try:
             _send_password_reset_email(user)
-        except Exception:
-            pass
+        except Exception as e:
+            # Por seguridad seguimos devolviendo ok, pero lo registramos en logs
+            logger.exception("Error enviando correo de reset a %s: %s", user.email, e)
+
     # No revelamos si existe o no
     return Response({'ok': True})
 
