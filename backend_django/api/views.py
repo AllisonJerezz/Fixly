@@ -178,7 +178,6 @@ def _send_verification_email(user):
         [user.email],
         html_message=html,
         fail_silently=True,
-        timeout=10,
     )
     logger.error("Verificación enviada a %s (send_mail no lanzó error)", user.email)
 
@@ -232,7 +231,6 @@ def _send_password_reset_email(user):
         [user.email],
         html_message=html,
         fail_silently=True,
-        timeout=10,
     )
     logger.error("Reset enviado a %s (send_mail no lanzó error)", user.email)
 
