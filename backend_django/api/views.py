@@ -1,4 +1,4 @@
-﻿from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate
 from django.db.models import Q, Avg, Count
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
@@ -10,6 +10,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
+from threading import Thread
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 import re
@@ -97,7 +98,6 @@ def register(request):
 
     user = User.objects.create_user(username=username, email=email, password=password)
 
-    # Requiere verificación por email para activar
     try:
         user.is_active = False
         user.save(update_fields=["is_active"])
@@ -106,13 +106,8 @@ def register(request):
 
     Profile.objects.get_or_create(user=user)
 
-    # Envía correo de verificación (ahora LOGUEA si falla)
-    try:
-        _send_verification_email(user)
-    except Exception as e:
-        logger.exception("Error enviando correo de verificación a %s: %s", user.email, e)
+    Thread(target=_send_verification_email, args=(user,), daemon=True).start()
 
-    # No devolvemos token hasta que verifique email
     return Response({'ok': True, 'user': UserSerializer(user).data}, status=201)
 
 
@@ -131,10 +126,7 @@ def login_view(request):
 
     if not user.is_active:
         # Reenvía verificación si el usuario intenta loguear sin activar
-        try:
-            _send_verification_email(user)
-        except Exception:
-            logger.exception("Error reenviando verificación a %s durante login", user.email)
+        Thread(target=_send_verification_email, args=(user,), daemon=True).start()
         return Response({'error': 'Email no verificado', 'code': 'email_not_verified'}, status=403)
 
     token = _jwt_for_user(user)
@@ -185,6 +177,8 @@ def _send_verification_email(user):
         getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
         [user.email],
         html_message=html,
+        fail_silently=True,
+        timeout=10,
     )
     logger.error("Verificación enviada a %s (send_mail no lanzó error)", user.email)
 
@@ -237,6 +231,8 @@ def _send_password_reset_email(user):
         getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
         [user.email],
         html_message=html,
+        fail_silently=True,
+        timeout=10,
     )
     logger.error("Reset enviado a %s (send_mail no lanzó error)", user.email)
 
@@ -265,15 +261,10 @@ def send_verification_email(request):
             status=429,
         )
 
-    try:
-        _send_verification_email(u)
-        store[key] = now
-        setattr(send_verification_email, '_last', store)
-        return Response({'ok': True})
-    except Exception as e:
-        logger.exception("Error enviando correo de verificación a %s: %s", u.email, e)
-        return Response({'error': 'Error enviando correo de verificación'}, status=500)
-
+    Thread(target=_send_verification_email, args=(u,), daemon=True).start()
+    store[key] = now
+    setattr(send_verification_email, '_last', store)
+    return Response({'ok': True})
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -281,6 +272,13 @@ def password_reset_request(request):
     email = (request.data.get('email') or '').strip().lower()
     if not email:
         return Response({'ok': True})
+
+    user = User.objects.filter(email=email).first()
+    if user:
+        Thread(target=_send_password_reset_email, args=(user,), daemon=True).start()
+
+    # No revelamos si existe o no
+    return Response({'ok': True})
 
     user = User.objects.filter(email=email).first()
     if user:
@@ -781,3 +779,7 @@ def assistant_chat(request):
         return Response({'reply': reply})
     except RuntimeError as e:
         return Response({'error': str(e)}, status=503)
+
+
+
+
