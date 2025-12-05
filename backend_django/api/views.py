@@ -70,6 +70,63 @@ def _is_strong_password(pw):
     return True
 
 
+def _send_email_generic(subject, txt, html, to_email):
+    """
+    Intenta enviar usando la API HTTP de SendGrid (evita bloqueos SMTP en el host),
+    y si falla, usa send_mail tradicional.
+    """
+    api_key = os.getenv("SENDGRID_API_KEY") or os.getenv("EMAIL_HOST_PASSWORD")
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test')
+    payload = {
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {"email": from_email},
+        "subject": subject,
+        "content": [
+            {"type": "text/plain", "value": txt},
+            {"type": "text/html", "value": html},
+        ],
+    }
+    if api_key:
+        try:
+            if _requests is not None:
+                r = _requests.post(
+                    "https://api.sendgrid.com/v3/mail/send",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                    timeout=10,
+                )
+                r.raise_for_status()
+                return True
+            else:
+                data = json.dumps(payload).encode("utf-8")
+                req = _urlreq.Request(
+                    "https://api.sendgrid.com/v3/mail/send",
+                    data=data,
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                    },
+                )
+                with _urlreq.urlopen(req, timeout=10):
+                    return True
+        except Exception:
+            logger.exception("Fallo usando la API HTTP de SendGrid para %s", to_email)
+
+    # Fallback a SMTP si la API no se pudo usar
+    send_mail(
+        subject,
+        txt,
+        from_email,
+        [to_email],
+        html_message=html,
+        fail_silently=False,
+    )
+    return True
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
@@ -178,15 +235,8 @@ def _send_verification_email(user):
         settings.EMAIL_HOST_USER,
     )
     try:
-        send_mail(
-            subject,
-            txt,
-            getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
-            [user.email],
-            html_message=html,
-            fail_silently=False,
-        )
-        logger.error("Verificación enviada a %s (send_mail no lanzó error)", user.email)
+        _send_email_generic(subject, txt, html, user.email)
+        logger.error("Verificación enviada a %s (sin error)", user.email)
     except Exception:
         logger.exception("Fallo al enviar verificación a %s", user.email)
         raise
@@ -241,15 +291,8 @@ def _send_password_reset_email(user):
         settings.EMAIL_HOST_USER,
     )
     try:
-        send_mail(
-            subject,
-            txt,
-            getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
-            [user.email],
-            html_message=html,
-            fail_silently=False,
-        )
-        logger.error("Reset enviado a %s (send_mail no lanzó error)", user.email)
+        _send_email_generic(subject, txt, html, user.email)
+        logger.error("Reset enviado a %s (sin error)", user.email)
     except Exception:
         logger.exception("Fallo al enviar reset a %s", user.email)
         raise
