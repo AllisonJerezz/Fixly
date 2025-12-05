@@ -170,16 +170,26 @@ def _send_verification_email(user):
   </table>
 </div>"""
 
-    logger.error("Enviando verificación a %s vía %s", user.email, settings.EMAIL_HOST)
-    send_mail(
-        subject,
-        txt,
+    logger.error(
+        "Enviando verificación a %s vía %s (from=%s, user=%s)",
+        user.email,
+        settings.EMAIL_HOST,
         getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
-        [user.email],
-        html_message=html,
-        fail_silently=False,
+        settings.EMAIL_HOST_USER,
     )
-    logger.error("Verificación enviada a %s (send_mail no lanzó error)", user.email)
+    try:
+        send_mail(
+            subject,
+            txt,
+            getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
+            [user.email],
+            html_message=html,
+            fail_silently=False,
+        )
+        logger.error("Verificación enviada a %s (send_mail no lanzó error)", user.email)
+    except Exception:
+        logger.exception("Fallo al enviar verificación a %s", user.email)
+        raise
 
 
 def _send_password_reset_email(user):
@@ -223,16 +233,26 @@ def _send_password_reset_email(user):
   </table>
 </div>"""
 
-    logger.error("Enviando reset a %s vía %s", user.email, settings.EMAIL_HOST)
-    send_mail(
-        subject,
-        txt,
+    logger.error(
+        "Enviando reset a %s vía %s (from=%s, user=%s)",
+        user.email,
+        settings.EMAIL_HOST,
         getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
-        [user.email],
-        html_message=html,
-        fail_silently=False,
+        settings.EMAIL_HOST_USER,
     )
-    logger.error("Reset enviado a %s (send_mail no lanzó error)", user.email)
+    try:
+        send_mail(
+            subject,
+            txt,
+            getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
+            [user.email],
+            html_message=html,
+            fail_silently=False,
+        )
+        logger.error("Reset enviado a %s (send_mail no lanzó error)", user.email)
+    except Exception:
+        logger.exception("Fallo al enviar reset a %s", user.email)
+        raise
 
 
 @api_view(['POST'])
