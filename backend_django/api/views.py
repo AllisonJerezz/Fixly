@@ -177,7 +177,7 @@ def _send_verification_email(user):
         getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
         [user.email],
         html_message=html,
-        fail_silently=True,
+        fail_silently=False,
     )
     logger.error("Verificación enviada a %s (send_mail no lanzó error)", user.email)
 
@@ -230,7 +230,7 @@ def _send_password_reset_email(user):
         getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@fixly.test'),
         [user.email],
         html_message=html,
-        fail_silently=True,
+        fail_silently=False,
     )
     logger.error("Reset enviado a %s (send_mail no lanzó error)", user.email)
 
