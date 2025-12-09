@@ -42,8 +42,9 @@ export default function AvatarPicker({
   className = "",
 }) {
   const inputRef = useRef(null);
+  const FALLBACK = "/avatar-fallback.png";
   const profile = readProfile() || {};
-  const [photo, setPhoto] = useState(profile.photoURL || "");
+  const [photo, setPhoto] = useState(profile.photoURL || FALLBACK);
 
   async function handleSelect(e) {
     const file = e.target.files?.[0];
@@ -69,10 +70,14 @@ export default function AvatarPicker({
         style={{ width: size, height: size }}
       >
         <img
-          src={photo || "/avatar-fallback.png"}
+          src={photo || FALLBACK}
           alt="Tu avatar"
           className="h-full w-full rounded-full object-cover"
-          onError={(e) => { e.currentTarget.src = "/avatar-fallback.png"; }}
+          onError={(e) => {
+            if (e.currentTarget.src.includes(FALLBACK)) return;
+            e.currentTarget.src = FALLBACK;
+            setPhoto(FALLBACK);
+          }}
         />
         <button
           type="button"
