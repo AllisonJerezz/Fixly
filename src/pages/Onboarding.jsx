@@ -256,15 +256,17 @@ function RoleCard({ active, title, desc, onClick }) {
 }
 
 function StepCategorias({ role, selected, toggle }) {
+  const [custom, setCustom] = useState("");
   const all = [
-    "Plomerí­a",
+    "Plomería",
     "Electricidad",
-    "Gasfiterí­a",
+    "Gasfitería",
     "Pintura",
-    "Carpinterí­a",
+    "Carpintería",
     "Cerrajería",
     "Aseo",
     "Mudanzas",
+    "Otro",
   ];
 
   return (
@@ -293,6 +295,30 @@ function StepCategorias({ role, selected, toggle }) {
             </button>
           );
         })}
+      </div>
+
+      <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-3">
+        <label className="text-sm text-indigo-200/85">¿Otra categoría?</label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            value={custom}
+            onChange={(e) => setCustom(e.target.value)}
+            placeholder="Escribe tu categoría"
+            className="flex-1 rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const val = (custom || "").trim();
+              if (!val) return;
+              if (!selected.includes(val)) toggle(val);
+              setCustom("");
+            }}
+            className="rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-400"
+          >
+            Agregar
+          </button>
+        </div>
       </div>
 
       <Tip>Puedes cambiar tus categorí­as luego en "Ajustar perfil".</Tip>

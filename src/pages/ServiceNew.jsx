@@ -18,6 +18,7 @@ export default function ServiceNew(){
   const [form, setForm] = useState({
     title: "",
     category: "",
+    customCategory: "",
     priceFrom: "",
     location: "",
     description: ""
@@ -33,15 +34,18 @@ export default function ServiceNew(){
   async function submit(e){
     e.preventDefault();
     setErr("");
-    if(!form.title.trim() || !form.category.trim()){
-      setErr("Completa título y categoría.");
+    const hasCustom = form.category === "Otro";
+    const chosenCat = hasCustom ? (form.customCategory || "").trim() : (form.category || "").trim();
+    if(!form.title.trim() || !chosenCat){
+      setErr("Completa título y categoría (si eliges 'Otro', escribe la categoría).");
       return;
     }
     try{
       setLoading(true);
       const created = await lsCreateService({
         title: form.title.trim(),
-        category: form.category,
+        category: hasCustom ? "" : chosenCat,
+        customCategory: hasCustom ? chosenCat : "",
         priceFrom: form.priceFrom ? Number(form.priceFrom) : 0,
         location: form.location,
         description: form.description
@@ -100,6 +104,15 @@ export default function ServiceNew(){
                   <option value="Mudanzas">Mudanzas</option>
                   <option value="Otro">Otro</option>
                 </select>
+                {form.category === "Otro" && (
+                  <input
+                    name="customCategory"
+                    value={form.customCategory}
+                    onChange={onChange}
+                    placeholder="Escribe tu categoría"
+                    className="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
+                  />
+                )}
               </Field>
 
               <Field label="Precio desde (CLP)">

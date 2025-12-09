@@ -1,4 +1,4 @@
-// DEBUG (quÃƒÂ­talo luego)
+
 // console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
@@ -231,6 +231,7 @@ export async function lsCreateService(payload){
   const created = await _fetchJSON('/services', { method: 'POST', body: {
     title: (payload.title||'').trim() || 'Servicio',
     category: payload.category || 'General',
+    custom_category: payload.customCategory || '',
     priceFrom: Number(payload.priceFrom)||0,
     location: payload.location || '',
     description: payload.description || '',
