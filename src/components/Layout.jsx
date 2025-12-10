@@ -78,13 +78,15 @@ export default function Layout({ authed, onLogout, children }) {
       isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-700 hover:bg-slate-100",
     ].join(" ");
 
+  const [open, setOpen] = useState(false); // menú mobile
+
   return (
     <div className="min-h-screen text-slate-900">
         <Notifier intervalMs={5000} enabled={logged} />
         <AssistantWidget />
         {/* Navbar */}
         <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-          <nav className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
+          <nav className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
             {/* Branding */}
             <Link
               to="/"
@@ -93,35 +95,44 @@ export default function Layout({ authed, onLogout, children }) {
               Fixly
             </Link>
 
-            {/* Navegación izquierda */}
-            <div className="flex items-center gap-1">
-              {logged && <NavLink to="/home" className={navClass}>Home</NavLink>}
-              {/* Navegación izquierda (dentro del bloque ya existente) */}
-{logged && isProvider && (
-  <>
-    <NavLink to="/services" className={navClass}>Mis servicios</NavLink>
-    <NavLink to="/services/new" className={navClass}>Publicar servicio</NavLink>
-  </>
-)}
-{logged && isClient && (
-  <NavLink to="/services/explore" className={navClass}>
-    Explorar servicios
-  </NavLink>
-)}
+            {/* Botón móvil */}
+            <button
+              type="button"
+              onClick={() => setOpen((o) => !o)}
+              className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 md:hidden"
+              aria-label="Abrir menú"
+            >
+              <span className="h-0.5 w-5 bg-slate-700" />
+              <span className="mt-1 h-0.5 w-5 bg-slate-700" />
+              <span className="mt-1 h-0.5 w-5 bg-slate-700" />
+            </button>
 
+            {/* Navegación izquierda (desktop) */}
+            <div className="hidden items-center gap-1 md:flex">
+              {logged && <NavLink to="/home" className={navClass}>Home</NavLink>}
+              {logged && isProvider && (
+                <>
+                  <NavLink to="/services" className={navClass}>Mis servicios</NavLink>
+                  <NavLink to="/services/new" className={navClass}>Publicar servicio</NavLink>
+                </>
+              )}
+              {logged && isClient && (
+                <NavLink to="/services/explore" className={navClass}>
+                  Explorar servicios
+                </NavLink>
+              )}
 
               {logged && isClient && requestsCount > 0 && (
                 <NavLink to="/requests" className={navClass}>Mis solicitudes</NavLink>
               )}
               {logged && isProvider && (
                 <NavLink to="/requests" className={navClass}>Solicitudes</NavLink>
-                
               )}
               {logged && !isClient && !isProvider && (
                 <NavLink to="/onboarding" className={navClass}>Onboarding</NavLink>
               )}
 
-              {/* NUEVO: Ajustar/Configurar perfil */}
+              {/* Ajustar perfil */}
               {logged && (
                 <NavLink to="/profile" className={navClass}>
                   {isClient ? "Ajustar perfil" : "Configurar perfil"}
@@ -133,12 +144,80 @@ export default function Layout({ authed, onLogout, children }) {
             <div className="flex-1" />
 
             {/* Píldora de rol con avatar */}
-            <RolePill />
-            {logged && <NotificationBell />}
+            <div className="hidden items-center gap-2 md:flex">
+              <RolePill />
+              {logged && <NotificationBell />}
 
-            {/* Acciones derechas */}
-            <div className="flex items-center gap-2"> {!logged && (<NavLink to="/register" className={navClass}>Registrarse</NavLink>)} {logged ? ( <button onClick={() => { onLogout?.(); navigate("/", { replace: true }); }} className="px-3 py-1.5 rounded-lg text-slate-700 hover:bg-slate-100" > Cerrar sesión </button> ) : ( <NavLink to="/login" className={navClass}>Iniciar sesión</NavLink> )} </div>
+              {!logged && (
+                <NavLink to="/register" className={navClass}>Registrarse</NavLink>
+              )}
+              {logged ? (
+                <button
+                  onClick={() => { onLogout?.(); navigate("/", { replace: true }); }}
+                  className="px-3 py-1.5 rounded-lg text-slate-700 hover:bg-slate-100"
+                >
+                  Cerrar sesión
+                </button>
+              ) : (
+                <NavLink to="/login" className={navClass}>Iniciar sesión</NavLink>
+              )}
+            </div>
           </nav>
+
+          {/* Menú móvil */}
+          {open && (
+            <div className="border-b border-slate-200 bg-white/95 px-4 pb-4 pt-2 shadow md:hidden">
+              <div className="grid gap-2">
+                {logged && <NavLink to="/home" className={navClass} onClick={() => setOpen(false)}>Home</NavLink>}
+                {logged && isProvider && (
+                  <>
+                    <NavLink to="/services" className={navClass} onClick={() => setOpen(false)}>Mis servicios</NavLink>
+                    <NavLink to="/services/new" className={navClass} onClick={() => setOpen(false)}>Publicar servicio</NavLink>
+                  </>
+                )}
+                {logged && isClient && (
+                  <NavLink to="/services/explore" className={navClass} onClick={() => setOpen(false)}>
+                    Explorar servicios
+                  </NavLink>
+                )}
+                {logged && isClient && requestsCount > 0 && (
+                  <NavLink to="/requests" className={navClass} onClick={() => setOpen(false)}>Mis solicitudes</NavLink>
+                )}
+                {logged && isProvider && (
+                  <NavLink to="/requests" className={navClass} onClick={() => setOpen(false)}>Solicitudes</NavLink>
+                )}
+                {logged && !isClient && !isProvider && (
+                  <NavLink to="/onboarding" className={navClass} onClick={() => setOpen(false)}>Onboarding</NavLink>
+                )}
+                {logged && (
+                  <NavLink to="/profile" className={navClass} onClick={() => setOpen(false)}>
+                    {isClient ? "Ajustar perfil" : "Configurar perfil"}
+                  </NavLink>
+                )}
+
+                <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/80 px-3 py-2">
+                  <div className="flex-1">
+                    <RolePill />
+                  </div>
+                  {logged && <NotificationBell />}
+                </div>
+
+                {!logged && (
+                  <NavLink to="/register" className={navClass} onClick={() => setOpen(false)}>Registrarse</NavLink>
+                )}
+                {logged ? (
+                  <button
+                    onClick={() => { onLogout?.(); navigate("/", { replace: true }); setOpen(false); }}
+                    className="px-3 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700"
+                  >
+                    Cerrar sesión
+                  </button>
+                ) : (
+                  <NavLink to="/login" className={navClass} onClick={() => setOpen(false)}>Iniciar sesión</NavLink>
+                )}
+              </div>
+            </div>
+          )}
         </header>
         
 
