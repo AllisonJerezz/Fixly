@@ -99,7 +99,7 @@ export default function Layout({ authed, onLogout, children }) {
             <button
               type="button"
               onClick={() => setOpen((o) => !o)}
-              className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 md:hidden"
+              className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 lg:hidden"
               aria-label="Abrir menú"
             >
               <span className="h-0.5 w-5 bg-slate-700" />
@@ -108,7 +108,7 @@ export default function Layout({ authed, onLogout, children }) {
             </button>
 
             {/* Navegación izquierda (desktop) */}
-            <div className="hidden items-center gap-1 md:flex">
+            <div className="hidden items-center gap-1 lg:flex">
               {logged && <NavLink to="/home" className={navClass}>Home</NavLink>}
               {logged && isProvider && (
                 <>
@@ -144,7 +144,7 @@ export default function Layout({ authed, onLogout, children }) {
             <div className="flex-1" />
 
             {/* Píldora de rol con avatar */}
-            <div className="hidden items-center gap-2 md:flex">
+            <div className="hidden items-center gap-2 lg:flex">
               <RolePill />
               {logged && <NotificationBell />}
 
@@ -166,7 +166,7 @@ export default function Layout({ authed, onLogout, children }) {
 
           {/* Menú móvil */}
           {open && (
-            <div className="border-b border-slate-200 bg-white/95 px-4 pb-4 pt-2 shadow md:hidden">
+            <div className="border-b border-slate-200 bg-white/95 px-4 pb-4 pt-2 shadow lg:hidden">
               <div className="grid gap-2">
                 {logged && <NavLink to="/home" className={navClass} onClick={() => setOpen(false)}>Home</NavLink>}
                 {logged && isProvider && (
