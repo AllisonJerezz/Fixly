@@ -17,6 +17,14 @@ import re
 import logging
 logger = logging.getLogger(__name__)
 
+BAD_WORDS = ["mierda", "puta", "maldito", "cabrón", "idiota", "fuck", "shit"]
+
+def _contains_bad(text):
+    if not text:
+        return False
+    t = str(text).lower()
+    return any(w in t for w in BAD_WORDS)
+
 from .models import User, Profile, Request, Offer, Service, Lead, ChatMessage, Review
 from .serializers import (
     UserSerializer, ProfileSerializer, RequestSerializer, OfferSerializer,
@@ -445,6 +453,8 @@ def requests_view(request):
                 return Response({'error': 'El presupuesto no puede ser negativo'}, status=400)
     except Exception:
         return Response({'error': 'Presupuesto inválido'}, status=400)
+    if _contains_bad(request.data.get('title')) or _contains_bad(request.data.get('description')) or _contains_bad(request.data.get('category')):
+        return Response({'error': 'La información contiene palabras no permitidas.'}, status=400)
     ser = RequestSerializer(data=request.data)
     if ser.is_valid():
         obj = Request.objects.create(owner=request.user, **{k: v for k, v in ser.validated_data.items() if k != 'owner'})
@@ -556,7 +566,15 @@ def services_view(request):
         return Response({'error': 'Autenticación requerida'}, status=401)
     if _role_of(request.user) != 'provider':
         return Response({'error': 'Solo proveedores pueden crear servicios'}, status=403)
-    ser = ServiceSerializer(data=request.data)
+    data = request.data.copy()
+    cat = (data.get('category') or '').strip()
+    if not cat:
+        cat = (data.get('custom_category') or '').strip() or 'otro'
+    data['category'] = cat
+    if _contains_bad(cat) or _contains_bad(data.get('title')) or _contains_bad(data.get('description')):
+        return Response({'error': 'La información contiene palabras no permitidas.'}, status=400)
+
+    ser = ServiceSerializer(data=data)
     if ser.is_valid():
         obj = Service.objects.create(owner=request.user, **{k: v for k, v in ser.validated_data.items() if k != 'owner'})
         return Response(ServiceSerializer(obj).data, status=201)
@@ -576,7 +594,15 @@ def service_view(request, service_id):
     if _role_of(request.user) != 'provider':
         return Response({'error': 'Solo proveedores pueden editar/eliminar sus servicios'}, status=403)
     if request.method == 'PUT':
-        ser = ServiceSerializer(s, data=request.data, partial=True)
+        data = request.data.copy()
+        cat = (data.get('category') or '').strip()
+        if not cat and data.get('custom_category'):
+            cat = data.get('custom_category').strip()
+        if cat:
+            data['category'] = cat
+        if _contains_bad(data.get('category')) or _contains_bad(data.get('title')) or _contains_bad(data.get('description')):
+            return Response({'error': 'La información contiene palabras no permitidas.'}, status=400)
+        ser = ServiceSerializer(s, data=data, partial=True)
         if ser.is_valid():
             ser.save()
             return Response(ServiceSerializer(s).data)
@@ -774,73 +800,5 @@ def _embed_ollama(text, base_url=None, model=None):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def assistant_chat(request):
-    """Chat simple con modelo local (Ollama).
-    Body esperado: { message: str, history?: [{role, content}] }
-    """
-    message = (request.data.get('message') or '').strip()
-    history = request.data.get('history') or []
-    if not message:
-        return Response({'error': 'Falta message'}, status=400)
-
-    # Contexto FAQ bÃ¡sico (MVP)
-    top = _pick_relevant_faq(message, k=5)
-    ctx = "\n\n".join([f"Q: {x.get('q','')}\nA: {x.get('a','')}" for x in top])
-    system = (
-        "Eres un asistente de Fixly en espaÃ±ol. Responde conciso y Ãºtil basÃ¡ndote en el contexto. "
-        "Si algo no estÃ¡ en el contexto, dilo y sugiere pasos prÃ¡cticos.\n\n"
-        f"Contexto:\n{ctx or '- (sin entradas relevantes)'}"
-    )
-
-    # Override con RAG + FAQ si hay Ã­ndice disponible
-    try:
-        base = getattr(settings, 'BASE_DIR', Path(__file__).resolve().parent.parent)
-        idx = (Path(base) / 'assistant' / 'index.json')
-        faq_items = _pick_relevant_faq(message, k=3)
-        faq_ctx = "\n\n".join([f"Q: {x.get('q','')}\nA: {x.get('a','')}" for x in faq_items])
-        rag_ctx = ''
-        if idx.exists():
-            js = json.loads(idx.read_text(encoding='utf-8'))
-            items = js.get('items', [])
-            qv = _embed_ollama(message)
-            def cos(a, b):
-                try:
-                    num = sum(x*y for x, y in zip(a, b))
-                    da = sum(x*x for x in a) ** 0.5
-                    db = sum(y*y for y in b) ** 0.5
-                    return num / (da*db + 1e-8)
-                except Exception:
-                    return 0.0
-            ranked = sorted(items, key=lambda it: cos(qv, it.get('vector') or []), reverse=True)
-            k = int(os.getenv('ASSISTANT_RAG_K', '3'))
-            topk = ranked[:k]
-            rag_ctx = "\n\n".join([f"[Fuente: {t.get('path')}#{t.get('chunk')}]\n{t.get('text','')}" for t in topk])
-        system = (
-            "Eres un asistente de Fixly en espaÃ±ol. Responde conciso y Ãºtil basÃ¡ndote en el contexto. "
-            "Si algo no estÃ¡ en el contexto, dilo y sugiere pasos prÃ¡cticos.\n\n"
-            f"Contexto (RAG):\n{rag_ctx or '-'}\n\n"
-            f"Contexto (FAQ):\n{faq_ctx or '-'}"
-        )
-    except Exception:
-        pass
-    msgs = [{'role': 'system', 'content': system}]
-    # Sanear history (mÃ¡ximo 8 turnos)
-    try:
-        for h in (history or [])[-4:]:
-            r = (h.get('role') or '').lower()
-            c = (h.get('content') or '').strip()
-            if r in ('user','assistant') and c:
-                msgs.append({'role': r, 'content': c})
-    except Exception:
-        pass
-    msgs.append({'role': 'user', 'content': message})
-
-    try:
-        reply = _ollama_chat(msgs)
-        reply = reply.strip() or 'Lo siento, no pude generar una respuesta.'
-        return Response({'reply': reply})
-    except RuntimeError as e:
-        return Response({'error': str(e)}, status=503)
-
-
-
-
+    """Chat desactivado temporalmente."""
+    return Response({"error": "Asistente desactivado temporalmente"}, status=503)
