@@ -1,4 +1,4 @@
-// src/pages/Requests.jsx (UTF-8)
+﻿// src/pages/Requests.jsx (UTF-8)
 import { Link } from "react-router-dom";
 import { useMemo, useState, useEffect } from "react";
 import { lsGetRequests, readProfile, isOwner } from "../api";
@@ -84,11 +84,11 @@ function RequestCard({ item, isClientView }) {
 
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
         <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2">
-          <div className="text-[10px] text-indigo-200/80">Categoría</div>
+          <div className="text-[10px] text-indigo-200/80">CategorÃ­a</div>
           <div className="text-sm font-semibold text-white/95">{item.category}</div>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2">
-          <div className="text-[10px] text-indigo-200/80">Ubicación</div>
+          <div className="text-[10px] text-indigo-200/80">UbicaciÃ³n</div>
           <div className="text-sm font-semibold text-white/90">{item.location || ""}</div>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2">
@@ -105,8 +105,8 @@ function RequestCard({ item, isClientView }) {
                 ? (`Proveedor aceptado${providerName && providerName !== 'Proveedor' ? `: ${providerName}` : ''}`)
                 : `Estado: en progreso`)
             : count > 0
-            ? (isClientView ? "Tienes ofertas para revisar" : "Aún en concurso")
-            : "Sin ofertas aún"}
+            ? (isClientView ? "Tienes ofertas para revisar" : "AÃºn en concurso")
+            : "Sin ofertas aÃºn"}
         </div>
       </div>
     </Link>
@@ -206,20 +206,20 @@ export default function Requests() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar (título o descripción)"
+              placeholder="Buscar (tÃ­tulo o descripciÃ³n)"
               className="md:col-span-2 w-full rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
             />
             <div>
               <label className="mb-1 block text-xs text-indigo-200/80">Estado</label>
-              <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-sky-300/40">
+              <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-sky-300/40 relative z-20">
                 {statusOptions.map((opt) => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs text-indigo-200/80">Categoría</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 text白 outline-none focus:ring-2 focus:ring-sky-300/40">
+              <label className="mb-1 block text-xs text-indigo-200/80">CategorÃ­a</label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 textç™½ outline-none focus:ring-2 focus:ring-sky-300/40">
                 {categoryOptions.map((opt) => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
@@ -227,7 +227,7 @@ export default function Requests() {
             </div>
             <div>
               <label className="mb-1 block text-xs text-indigo-200/80">Criticidad</label>
-              <select value={urgency} onChange={(e) => setUrgency(e.target.value)} className="w-full rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-sky-300/40">
+              <select value={urgency} onChange={(e) => setUrgency(e.target.value)} className="w-full rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-sky-300/40 relative z-20">
                 {urgencyOptions.map((opt) => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
@@ -236,7 +236,7 @@ export default function Requests() {
             <input
               value={loc}
               onChange={(e) => setLoc(e.target.value)}
-              placeholder="Ubicación"
+              placeholder="UbicaciÃ³n"
               className="w-full rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
             />
             <div className="md:col-span-2 flex items-center gap-4 text-sm text-indigo-100/90">
@@ -251,10 +251,10 @@ export default function Requests() {
             </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs text-indigo-200/80">Ordenar</label>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-sky-300/40">
-                <option value="newest">Más recientes</option>
-                <option value="oldest">Más antiguas</option>
-                <option value="mostOffers">Más ofertas</option>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-sky-300/40 relative z-20">
+                <option value="newest">MÃ¡s recientes</option>
+                <option value="oldest">MÃ¡s antiguas</option>
+                <option value="mostOffers">MÃ¡s ofertas</option>
                 <option value="leastOffers">Menos ofertas</option>
               </select>
             </div>
@@ -270,13 +270,13 @@ export default function Requests() {
           </div>
         ) : filtered.length === 0 ? (
           <Empty
-            title={role === "client" ? "Sin resultados" : role === "provider" ? "Nada por aquí" : "No hay solicitudes"}
+            title={role === "client" ? "Sin resultados" : role === "provider" ? "Nada por aquÃ­" : "No hay solicitudes"}
             subtitle={
               role === "client"
                 ? "Prueba ajustando los filtros o crea una nueva solicitud."
                 : role === "provider"
-                ? "Cambia filtros o vuelve más tarde."
-                : "Cuando existan solicitudes, aparecerán aquí."
+                ? "Cambia filtros o vuelve mÃ¡s tarde."
+                : "Cuando existan solicitudes, aparecerÃ¡n aquÃ­."
             }
             action={
               role === "client" ? (
@@ -297,3 +297,4 @@ export default function Requests() {
     </section>
   );
 }
+

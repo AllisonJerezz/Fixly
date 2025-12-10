@@ -116,6 +116,9 @@ class ServiceSerializer(serializers.ModelSerializer):
         model = Service
         fields = ('id', 'owner', 'ownerId', 'title', 'category', 'price_from', 'location', 'description', 'status', 'created_at')
         read_only_fields = ('owner', 'created_at')
+        extra_kwargs = {
+            'category': {'required': False, 'allow_blank': True},
+        }
 
     def get_ownerId(self, obj):
         return str(obj.owner_id)
