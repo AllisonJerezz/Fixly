@@ -90,6 +90,7 @@ export default function Layout({ authed, onLogout, children }) {
             {/* Branding */}
             <Link
               to="/"
+              onClick={() => setOpen(false)}
               className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 bg-clip-text text-transparent"
             >
               Fixly
