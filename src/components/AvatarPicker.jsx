@@ -42,7 +42,7 @@ export default function AvatarPicker({
   className = "",
 }) {
   const inputRef = useRef(null);
-  const FALLBACK = "/avatar-fallback.png";
+  const FALLBACK = "/avatar-fallback.svg";
   const profile = readProfile() || {};
   const [photo, setPhoto] = useState(profile.photoURL || FALLBACK);
 

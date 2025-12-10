@@ -337,10 +337,10 @@ function StepConfirmacion({ form }) {
       <div className="flex items-center gap-4">
         <div className="h-14 w-14 overflow-hidden rounded-full border border-white/15 bg-white/5 shadow">
           <img
-            src={photo || "/avatar-fallback.png"}
+            src={photo || "/avatar-fallback.svg"}
             alt="Avatar"
             className="h-full w-full object-cover"
-            onError={(e) => { e.currentTarget.src = "/avatar-fallback.png"; }}
+            onError={(e) => { e.currentTarget.src = "/avatar-fallback.svg"; }}
           />
         </div>
         <div className="text-sm text-indigo-200/85">Así se verá tu avatar</div>
