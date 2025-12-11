@@ -36,7 +36,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const p = readProfile?.() || {};
     setForm({
-      displayName: p.displayName || "",
+      displayName: p.displayName || p.display_name || p.username || "",
       role: p.role || "",
       location: p.location || "",
       bio: p.bio || "",
