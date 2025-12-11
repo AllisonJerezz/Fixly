@@ -91,7 +91,13 @@ export function saveProfile(profile) {
   // Payload para backend (snake_case)
   const payload = { ...(profile || {}) };
   if (profile?.displayName) payload.display_name = profile.displayName;
-  if (profile?.photoURL) payload.photo_url = profile.photoURL;
+  // Solo enviamos al backend si es una URL válida (evitamos dataURL base64 que no pasa el URLField)
+  if (profile?.photoURL && /^https?:\/\//i.test(profile.photoURL)) {
+    payload.photo_url = profile.photoURL;
+  } else {
+    // la guardamos localmente aunque no vaya al backend
+    merged.photoURL = profile?.photoURL || merged.photoURL || "";
+  }
 
   const raw = JSON.stringify(merged || {});
   localStorage.setItem(K.PROFILE, raw);
