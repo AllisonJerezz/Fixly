@@ -800,5 +800,44 @@ def _embed_ollama(text, base_url=None, model=None):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def assistant_chat(request):
-    """Chat desactivado temporalmente."""
-    return Response({"error": "Asistente desactivado temporalmente"}, status=503)
+    """
+    Proxy sencillo a Ollama (chat) con un prompt corto y contexto de FAQ.
+    Devuelve siempre una respuesta breve en español.
+    """
+    import requests
+
+    user_msg = (request.data.get('message') or '').strip()
+    if not user_msg:
+        return Response({"error": "Falta el mensaje"}, status=400)
+
+    # Cargar FAQ local para dar un poco de contexto
+    faq_entries = _load_faq_entries()
+    faq_text = "\n".join([f"- {f.get('question','')}: {f.get('answer','')}" for f in faq_entries])
+
+    system_prompt = (
+        "Eres un asistente de Fixly. Responde en español, muy breve (1-3 frases). "
+        "Si no sabes, sugiere contactar soporte. Contexto FAQ:\n" + faq_text
+    )
+
+    ollama_host = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    model = os.getenv("OLLAMA_MODEL", "llama3")
+    url = f"{ollama_host.rstrip('/')}/api/chat"
+
+    payload = {
+        "model": model,
+        "stream": False,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_msg},
+        ],
+    }
+
+    try:
+        res = requests.post(url, json=payload, timeout=12)
+        if not res.ok:
+            return Response({"error": f"Ollama {res.status_code}"}, status=502)
+        data = res.json()
+        answer = data.get("message", {}).get("content") or ""
+        return Response({"reply": answer})
+    except requests.exceptions.RequestException as e:
+        return Response({"error": f"No se pudo conectar a Ollama: {e}"}, status=502)
