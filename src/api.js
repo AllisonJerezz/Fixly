@@ -99,6 +99,9 @@ const me = await _fetchJSON('/profile');
 const cache = me?.profile
 ? { id: me.id, ...me.profile, username: me.username, email: me.email }
 : { id: me?.id, username: me?.username, email: me?.email };
+// preserva photoURL si el backend no lo devuelve
+const serverPhoto = cache?.photoURL || cache?.photo_url;
+cache.photoURL = serverPhoto || merged.photoURL || "";
 const fullRaw = JSON.stringify(cache || {});
 localStorage.setItem(K.PROFILE, fullRaw);
 const uu = getAuthUsername();
