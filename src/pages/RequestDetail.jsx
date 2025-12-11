@@ -295,7 +295,7 @@ export default function RequestDetail() {
                 {norm(req.status) === "en progreso" ? "Marcar como completado" : "Marcar en progreso"}
               </button>
             )}
-            {/* BotÃ³n para abrir chat cuando hay oferta aceptada y soy participante */}
+            {/* Botón para abrir chat cuando hay oferta aceptada y soy participante */}
             {accepted && (ownerView || myOffer?.status === "accepted") && (
               <Link
                 to={`/chat/${req.id}`}
@@ -323,7 +323,7 @@ export default function RequestDetail() {
                 <InfoBox label="Estado" value={<StatusBadge status={req.status || "pendiente"} />} />
               </div>
 
-              {/* LÃ­nea extra para mostrar origen si existe */}
+              {/* LÃínea extra para mostrar origen si existe */}
               {hasPreference && (
                 <div className="mt-3 rounded-xl border border-amber-300/30 bg-amber-400/5 p-3 text-sm text-amber-100">
                   Origen de esta solicitud:&nbsp;

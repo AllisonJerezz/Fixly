@@ -105,8 +105,8 @@ function RequestCard({ item, isClientView }) {
                 ? (`Proveedor aceptado${providerName && providerName !== 'Proveedor' ? `: ${providerName}` : ''}`)
                 : `Estado: en progreso`)
             : count > 0
-            ? (isClientView ? "Tienes ofertas para revisar" : "AÃºn en concurso")
-            : "Sin ofertas aÃºn"}
+            ? (isClientView ? "Tienes ofertas para revisar" : "An en concurso")
+            : "Sin ofertas aún"}
         </div>
       </div>
     </Link>
@@ -206,7 +206,7 @@ export default function Requests() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar (tÃ­tulo o descripciÃ³n)"
+              placeholder="Buscar (tí­tulo o descripción)"
               className="md:col-span-2 w-full rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
             />
             <div>
@@ -236,7 +236,7 @@ export default function Requests() {
             <input
               value={loc}
               onChange={(e) => setLoc(e.target.value)}
-              placeholder="UbicaciÃ³n"
+              placeholder="Ubicación"
               className="w-full rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-sky-300/40"
             />
             <div className="md:col-span-2 flex items-center gap-4 text-sm text-indigo-100/90">
@@ -252,9 +252,9 @@ export default function Requests() {
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs text-indigo-200/80">Ordenar</label>
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full rounded-lg border border-white/15 bg-indigo-500/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-sky-300/40 relative z-20">
-                <option value="newest">MÃ¡s recientes</option>
-                <option value="oldest">MÃ¡s antiguas</option>
-                <option value="mostOffers">MÃ¡s ofertas</option>
+                <option value="newest">Más recientes</option>
+                <option value="oldest">Más antiguas</option>
+                <option value="mostOffers">Más ofertas</option>
                 <option value="leastOffers">Menos ofertas</option>
               </select>
             </div>
@@ -275,8 +275,8 @@ export default function Requests() {
               role === "client"
                 ? "Prueba ajustando los filtros o crea una nueva solicitud."
                 : role === "provider"
-                ? "Cambia filtros o vuelve mÃ¡s tarde."
-                : "Cuando existan solicitudes, aparecerÃ¡n aquÃ­."
+                ? "Cambia filtros o vuelve más tarde."
+                : "Cuando existan solicitudes, aparecerán aquí­."
             }
             action={
               role === "client" ? (

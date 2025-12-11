@@ -227,7 +227,7 @@ export default function Layout({ authed, onLogout, children }) {
         </main>
 
         {/* Footer */}
-<footer className="relative mt-1 bg-white"> {!isLanding && ( <div className="absolute -top-1 left-0 w-full overflow-hidden leading-[0]" aria-hidden> <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="h-12 w-full"> <path d="M0,64 C240,128 480,0 720,16 C960,32 1200,112 1440,64 L1440,0 L0,0 Z" fill="#ffffff" /> </svg> </div> )} <div className="mx-auto max-w-6xl px-4 py-8 text-center text-sm text-slate-600"> Hecho con amor <span className="align-middle">??</span><br></br><a href="mailto:soporte@fixly.test" className="text-sky-700 hover:underline">soporte@fixly.test</a> · <a href="tel:+56987654321" className="text-sky-700 hover:underline">+56 9 8765 4321</a> </div> </footer>      </div>
+<footer className="relative mt-1 bg-white"> {!isLanding && ( <div className="absolute -top-1 left-0 w-full overflow-hidden leading-[0]" aria-hidden> <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="h-12 w-full"> <path d="M0,64 C240,128 480,0 720,16 C960,32 1200,112 1440,64 L1440,0 L0,0 Z" fill="#ffffff" /> </svg> </div> )} <div className="mx-auto max-w-6xl px-4 py-8 text-center text-sm text-slate-600"> Hecho con amor <span className="align-middle"></span><br>♥</br><a href="mailto:soporte@fixly.test" className="text-sky-700 hover:underline">soporte@fixly.test</a> · <a href="tel:+56987654321" className="text-sky-700 hover:underline">+56 9 8765 4321</a> </div> </footer>      </div>
     );
 }
 

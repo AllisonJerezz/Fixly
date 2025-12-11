@@ -17,7 +17,7 @@ export default function Onboarding({ onFinish }) {
     displayName: stored.displayName || "",
     role: stored.role || "", // "client" | "provider"
     categories: Array.isArray(stored.categories) ? stored.categories : [],
-    // photoURL no es obligatorio guardarlo aquÃ­, AvatarPicker lo persiste directo,
+    // photoURL no es obligatorio guardarlo aquí­, AvatarPicker lo persiste directo,
     // pero lo mantenemos en memoria para la Confirmación final si ya existe.
     photoURL: stored.photoURL || "",
   });
@@ -39,7 +39,7 @@ export default function Onboarding({ onFinish }) {
       return;
     }
     if (step === 2 && form.role === "provider" && (!form.categories || form.categories.length === 0)) {
-      setErr("Selecciona al menos una categorÃ­a si eres proveedor.");
+      setErr("Selecciona al menos una categorí­a si eres proveedor.");
       return;
     }
     setStep((s) => Math.min(s + 1, steps.length - 1));
