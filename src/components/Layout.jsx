@@ -155,12 +155,12 @@ export default function Layout({ authed, onLogout, children }) {
             <button
               type="button"
               onClick={() => setOpen((o) => !o)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 lg:hidden"
+              className="inline-flex h-10 w-10 flex-col items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 lg:hidden"
               aria-label="Abrir menú"
             >
-              <span className="block h-0.5 w-6 bg-slate-700" />
-              <span className="mt-1 block h-0.5 w-6 bg-slate-700" />
-              <span className="mt-1 block h-0.5 w-6 bg-slate-700" />
+              <span className="block h-0.5 w-6 rounded-full bg-slate-700" />
+              <span className="mt-1 block h-0.5 w-6 rounded-full bg-slate-700" />
+              <span className="mt-1 block h-0.5 w-6 rounded-full bg-slate-700" />
             </button>
           </nav>
 
@@ -230,6 +230,9 @@ export default function Layout({ authed, onLogout, children }) {
 <footer className="relative mt-1 bg-white"> {!isLanding && ( <div className="absolute -top-1 left-0 w-full overflow-hidden leading-[0]" aria-hidden> <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="h-12 w-full"> <path d="M0,64 C240,128 480,0 720,16 C960,32 1200,112 1440,64 L1440,0 L0,0 Z" fill="#ffffff" /> </svg> </div> )} <div className="mx-auto max-w-6xl px-4 py-8 text-center text-sm text-slate-600"> Hecho con amor <span className="align-middle">??</span><br></br><a href="mailto:soporte@fixly.test" className="text-sky-700 hover:underline">soporte@fixly.test</a> · <a href="tel:+56987654321" className="text-sky-700 hover:underline">+56 9 8765 4321</a> </div> </footer>      </div>
     );
 }
+
+
+
 
 
 
