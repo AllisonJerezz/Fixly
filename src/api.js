@@ -85,30 +85,37 @@ return merged;
 }
 
 export function saveProfile(profile) {
-const u = getAuthUsername();
-const merged = mergeWithPrevIdentity(profile);
-const raw = JSON.stringify(merged || {});
-localStorage.setItem(K.PROFILE, raw);
-if (u) localStorage.setItem(K.PROFILE_NS(u), raw);
-// Sincroniza y refresca cache con id completo (no bloqueante)
-(async () => {
-try {
-await _fetchJSON('/profile', { method: 'PUT', body: profile });
-try {
-const me = await _fetchJSON('/profile');
-const cache = me?.profile
-? { id: me.id, ...me.profile, username: me.username, email: me.email }
-: { id: me?.id, username: me?.username, email: me?.email };
-// preserva photoURL si el backend no lo devuelve
-const serverPhoto = cache?.photoURL || cache?.photo_url;
-cache.photoURL = serverPhoto || merged.photoURL || "";
-const fullRaw = JSON.stringify(cache || {});
-localStorage.setItem(K.PROFILE, fullRaw);
-const uu = getAuthUsername();
-if (uu) localStorage.setItem(K.PROFILE_NS(uu), fullRaw);
-} catch {}
-} catch {}
-})();
+  const u = getAuthUsername();
+  const merged = mergeWithPrevIdentity(profile);
+
+  // Payload para backend (snake_case)
+  const payload = { ...(profile || {}) };
+  if (profile?.displayName) payload.display_name = profile.displayName;
+  if (profile?.photoURL) payload.photo_url = profile.photoURL;
+
+  const raw = JSON.stringify(merged || {});
+  localStorage.setItem(K.PROFILE, raw);
+  if (u) localStorage.setItem(K.PROFILE_NS(u), raw);
+
+  // Sincroniza y refresca cache con id completo (no bloqueante)
+  (async () => {
+    try {
+      await _fetchJSON('/profile', { method: 'PUT', body: payload });
+      try {
+        const me = await _fetchJSON('/profile');
+        const cache = me?.profile
+          ? { id: me.id, ...me.profile, username: me.username, email: me.email }
+          : { id: me?.id, username: me?.username, email: me?.email };
+        // normaliza campos y preserva foto/nombre si no vienen del backend
+        cache.displayName = cache.displayName || cache.display_name || merged.displayName || "";
+        cache.photoURL = cache.photoURL || cache.photo_url || merged.photoURL || "";
+        const fullRaw = JSON.stringify(cache || {});
+        localStorage.setItem(K.PROFILE, fullRaw);
+        const uu = getAuthUsername();
+        if (uu) localStorage.setItem(K.PROFILE_NS(uu), fullRaw);
+      } catch {}
+    } catch {}
+  })();
 }
 
 // Obtiene rápidamente el ID del usuario autenticado desde el backend
