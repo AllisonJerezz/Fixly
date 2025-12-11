@@ -1,4 +1,4 @@
-
+﻿
 // console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
@@ -118,7 +118,7 @@ export function saveProfile(profile) {
   })();
 }
 
-// Obtiene rápidamente el ID del usuario autenticado desde el backend
+// Obtiene rÃ¡pidamente el ID del usuario autenticado desde el backend
 export async function fetchMyProfile() {
   try { return await _fetchJSON('/profile'); } catch { return null; }
 }
@@ -138,7 +138,7 @@ export function setOnboardingDone() {
   if (u) localStorage.setItem(K.DONE_NS(u), "1");
 }
 
-/* -------- Auth endpoints (ahora con validación real) -------- */
+/* -------- Auth endpoints (ahora con validaciÃ³n real) -------- */
 async function registerLocal({ username, email, password }) {
   const u = String(username || "").trim().toLowerCase();
   const e = String(email || "").trim().toLowerCase();
@@ -149,13 +149,13 @@ async function registerLocal({ username, email, password }) {
 
   if (users[u]) throw new Error("El usuario ya existe");
   if (Object.values(users).some((x) => x.emailLower === e)) {
-    throw new Error("El email ya estÃƒÂ¡ registrado");
+    throw new Error("El email ya estÃƒÆ’Ã‚Â¡ registrado");
   }
 
   users[u] = { username: username.trim(), emailLower: e, password: p };
   _setUsers(users);
 
-  // No autenticamos aquÃƒÂ­; el usuario va al Login
+  // No autenticamos aquÃƒÆ’Ã‚Â­; el usuario va al Login
   return { ok: true };
 }
 
@@ -170,7 +170,7 @@ async function loginLocal(userOrEmail, password) {
   const account = byUser || byEmail;
 
   if (!account || account.password !== p) {
-    throw new Error("Credenciales inválidas");
+    throw new Error("Credenciales invÃ¡lidas");
   }
 
   // Autentica y sincroniza perfil + onboarding previos
@@ -281,7 +281,7 @@ export async function lsRejectOffer(requestId, offerId) {
   return await lsGetRequestById(requestId);
 }
 
-/* Alias útil usado en otros archivos */
+/* Alias Ãºtil usado en otros archivos */
 export const createRequest = lsCreateRequest;
 
 // --- PERFIL DE OTRO USUARIO (por usernameLower) ---
@@ -311,7 +311,7 @@ export function lsCreateLead({ serviceId, providerId, message, contact }) {
     providerId: String(providerId || ""),
     clientId: String(clientId || ""),
     message: String(message || ""),
-    contact: String(contact || ""), // opcional: email/teléfono
+    contact: String(contact || ""), // opcional: email/telÃ©fono
     createdAt: new Date().toISOString(),
     status: "nuevo", // nuevo | visto | respondido
   };
@@ -376,7 +376,7 @@ export async function lsAddReview({ requestId, toUserId, fromUserId, rating, com
     const res = await _fetchJSON('/reviews', { method: 'POST', body });
     return res;
   } catch (e) {
-    // Fallback a localStorage si el backend no está disponible
+    // Fallback a localStorage si el backend no estÃ¡ disponible
     const list = _readReviews();
     const item = {
       id: String(Date.now()),
@@ -424,7 +424,7 @@ export function lsGetUserRatingStats(userId) {
   return { count, avg };
 }
 
-// --- Autenticación con backend ---
+// --- AutenticaciÃ³n con backend ---
 export async function register({ username, email, password }) {
   const u = String(username || "").trim().toLowerCase();
   const e = String(email || "").trim().toLowerCase();
@@ -444,7 +444,7 @@ export async function login(userOrEmail, password) {
   } catch (e) {
     const msg = String(e?.message || '').toLowerCase();
     if (msg.includes('no verificado')) {
-      // Disparar envío de verificación en background
+      // Disparar envÃ­o de verificaciÃ³n en background
       try { await sendVerification({ userOrEmail: id }); } catch {}
     }
     throw e;
@@ -452,10 +452,15 @@ export async function login(userOrEmail, password) {
   const username = data?.user?.username || id;
   const token = data?.token || '';
   setAuth(username, token);
-  // Cachea perfil del backend si estÃƒÂ¡ disponible
+  // Cachea perfil del backend si está disponible
   try {
     const me = await _fetchJSON('/profile');
-    const cache = me?.profile ? { id: me.id, ...me.profile, username: me.username, email: me.email } : { id: me?.id, username: me?.username, email: me?.email };
+    const cache = me?.profile
+      ? { id: me.id, ...me.profile, username: me.username, email: me.email }
+      : { id: me?.id, username: me?.username, email: me?.email };
+    const local = readProfile() || {};
+    cache.displayName = cache.displayName || cache.display_name || local.displayName || local.display_name || "";
+    cache.photoURL = cache.photoURL || cache.photo_url || local.photoURL || local.photo_url || "";
     const raw = JSON.stringify(cache || {});
     localStorage.setItem(K.PROFILE, raw);
     const u = getAuthUsername();
@@ -470,7 +475,12 @@ export async function login(userOrEmail, password) {
 
 export async function fetchProfileAndCache(){
   const me = await _fetchJSON('/profile');
-  const cache = me?.profile ? { id: me.id, ...me.profile, username: me.username, email: me.email } : { id: me?.id, username: me?.username, email: me?.email };
+  const cache = me?.profile
+    ? { id: me.id, ...me.profile, username: me.username, email: me.email }
+    : { id: me?.id, username: me?.username, email: me?.email };
+  const local = readProfile() || {};
+  cache.displayName = cache.displayName || cache.display_name || local.displayName || local.display_name || "";
+  cache.photoURL = cache.photoURL || cache.photo_url || local.photoURL || local.photo_url || "";
   const raw = JSON.stringify(cache || {});
   localStorage.setItem(K.PROFILE, raw);
   const u = getAuthUsername();
@@ -501,12 +511,12 @@ export async function changePassword({ oldPassword, newPassword }) {
   return await _fetchJSON('/auth/password-change', { method: 'POST', body });
 }
 
-// ===== Verificación de email =====
+// ===== VerificaciÃ³n de email =====
 export async function sendVerification({ userOrEmail } = {}) {
   try {
     return await _fetchJSON('/auth/send-verification', { method: 'POST', body: userOrEmail ? { userOrEmail } : {} });
   } catch (e) {
-    return { ok: false, error: e?.message || 'No se pudo enviar verificación' };
+    return { ok: false, error: e?.message || 'No se pudo enviar verificaciÃ³n' };
   }
 }
 
@@ -514,3 +524,5 @@ export async function verifyEmail(uid, token) {
   const q = `uid=${encodeURIComponent(uid)}&token=${encodeURIComponent(token)}`;
   return await _fetchJSON(`/auth/verify?${q}`);
 }
+
+
