@@ -815,8 +815,14 @@ def assistant_chat(request):
     faq_text = "\n".join([f"- {f.get('question','')}: {f.get('answer','')}" for f in faq_entries])
 
     system_prompt = (
-        "Eres un asistente de Fixly. Responde en español, muy breve (1-3 frases). "
-        "Si no sabes, sugiere contactar soporte. Contexto FAQ:\n" + faq_text
+        "Eres el asistente oficial de Fixly. Responde únicamente sobre cómo usar la plataforma: "
+        "- Cómo publicar una solicitud y gestionarla (estado, ofertas, aceptación). "
+        "- Cómo publicar/editar servicios. "
+        "- Notificaciones y seguimiento. "
+        "- El chat solo se habilita cuando una oferta ha sido aceptada. "
+        "No hables de temas ajenos a Fixly ni ofrezcas chatear como IA general. "
+        "Sé conciso (1-2 frases), en español. Si no tienes la info, sugiere contactar soporte. "
+        "Contexto FAQ:\n" + faq_text
     )
 
     ollama_host = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
@@ -833,7 +839,7 @@ def assistant_chat(request):
     }
 
     try:
-        res = requests.post(url, json=payload, timeout=12)
+        res = requests.post(url, json=payload, timeout=8)
         if not res.ok:
             return Response({"error": f"Ollama {res.status_code}"}, status=502)
         data = res.json()
